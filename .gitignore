@@ -1,1 +1,8 @@
+# populus configuration file
 populus.json
+
+# builds and cache
+build
+.cache/
+tests/__pycache__/
+
