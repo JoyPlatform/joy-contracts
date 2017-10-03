@@ -1,8 +1,11 @@
-# populus configuration file
-populus.json
-
 # builds and cache
 build
 .cache/
 tests/__pycache__/
+
+# populus configuration file
+populus.json
+
+# populus deployment registy
+registrar.json
 
