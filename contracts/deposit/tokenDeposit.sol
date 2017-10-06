@@ -4,7 +4,7 @@ import '../math/SafeMath.sol';
 import '../token/MultiContractAsset.sol';
 import '../token/ERC223ReceivingContract.sol';
 import '../ownership/Ownable.sol';
-
+import '../game/JoyGameAbstract.sol';
 
 contract tokenDeposit is ERC223ReceivingContract, Ownable {
     using SafeMath for uint;
@@ -69,31 +69,31 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
      */
     function transferToGame(address _playerAddr, address _gameContractAddress, uint _value, bytes _data) onlyOwner {
         // check if player have requested _value in his deposit
-        require(_value <= deposit[_playerAddr]);
+        require(_value <= deposits[_playerAddr]);
 
         // _gameContractAddress should be a contract, throw exception if owner will tries to transfer flunds to the individual address.
         // Require supported Token to have 'isContract' method.
-        require(m_supportedToken.isContract(_gameContractAddress));
+        require(isContract(_gameContractAddress));
 
         // Create local joyGame object using address of given gameContract.
-        joyGameAbstract joyGame = joyGameAbstract(_gameContractAddress);
+        JoyGameAbstract joyGame = JoyGameAbstract(_gameContractAddress);
 
-        // Require this contract and gameContract to be ownerd by the same address.
-        // This check prevents interaction with this contract from externals contracts
-        require(joyGame.owner == this.owner);
+        // Require this contract and gameContract to be owned by the same address.
+        // This check prevents interaction with this contract from external contracts
+        require(joyGame.getOwner() == owner);
 
         deposits[_playerAddr] = deposits[_playerAddr].sub(_value);
 
         // increase gameContract deposit for the time of the game
         // this funds are locked, and even can not be withdraw by owner
-        deposits[_to] = deposits[_to].add(_value);
+        deposits[_gameContractAddress] = deposits[_gameContractAddress].add(_value);
 
 
         bytes memory _empty_data;
         joyGame.onTokenReceived(msg.sender, _value, _empty_data);
 
         // Event
-        OnTokenReceived(, _value, _empty_data);
+        OnTokenReceived(msg.sender, _value, _empty_data);
     }
 
     /**
@@ -110,12 +110,23 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
          * Even if owner use 'transferToGame' method to transfer some deposits to the fake contract,
          * he will not be able to withdraw Tokens to any private address.
          */
-        require(isContract(_to) == 0);
+        require(isContract(_to) == false);
 
         deposits[msg.sender] = deposits[msg.sender].sub(_value);
 
         // Use m_supportedToken metheod to transfer real Tokens.
         m_supportedToken.transfer(_to, _value);
+    }
+
+    //---------------------- utils ---------------------------
+
+    function isContract(address _addr) internal constant returns (bool) {
+        uint codeLength;
+        assembly {
+            // Retrieve the size of the code on target address, this needs assembly .
+            codeLength := extcodesize(_addr)
+        }
+        return (codeLength > 0);
     }
 }
 
