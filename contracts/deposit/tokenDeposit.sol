@@ -19,10 +19,21 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
     // debug
 
     /**
+     * platformReserve - Main platform address and reserve for winnings
+     * Important address that collecting part of players losses as reserve which players will get thier winnings.
+     * For security reasons "platform reserve address" needs to be separated/other that address of owner of this contract.
+     */
+    address platformReserve;
+
+    /**
      * @dev Constructor
      * @param _supportedToken The address of token contract that will be supported as players deposit
      */
-    function tokenDeposit(address _supportedToken) {
+    function tokenDeposit(address _supportedToken, address _platformReserve) {
+        // owner need to be separated from _platformReserve
+        require(owner != _platformReserve);
+
+        platformReserve = _platformReserve;
         m_supportedToken = MultiContractAsset(_supportedToken);
     }
 
@@ -68,6 +79,9 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
      * @param _data additionl data
      */
     function transferToGame(address _playerAddr, address _gameContractAddress, uint _value, bytes _data) onlyOwner {
+        // platformReserve is not allowed to play, this check prevents owner take possession of platformReserve
+        require(_playerAddr != platformReserve);
+
         // check if player have requested _value in his deposit
         require(_value <= deposits[_playerAddr]);
 
@@ -89,11 +103,10 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
         deposits[_gameContractAddress] = deposits[_gameContractAddress].add(_value);
 
 
-        bytes memory _empty_data;
-        joyGame.onTokenReceived(msg.sender, _value, _empty_data);
+        joyGame.onTokenReceived(msg.sender, _value, _data);
 
         // Event
-        OnTokenReceived(msg.sender, _value, _empty_data);
+        OnTokenReceived(msg.sender, _value, _data);
     }
 
     /**

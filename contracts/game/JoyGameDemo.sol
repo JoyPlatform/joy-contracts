@@ -32,19 +32,16 @@ contract JoyGameDemo is JoyGameAbstract {
      * part of players losses will be distributed to this address
      */
     address gameDevAddr;
-    address platformAddr;
 
     /**
      * Main constructor
      * @param _depositContract address of already deployed depositContract
      * @param _gameDev address of game creator
-     * @param _platformAddr addres of platform that host games
      */
-    function JoyGameDemo(address _depositContract, address _gameDev, address _platformAddr) {
+    function JoyGameDemo(address _depositContract, address _gameDev) {
         m_playerDeposits = tokenDeposit(_depositContract);
 
         gameDevAddr = _gameDev;
-        platformAddr = _platformAddr;
     }
 
     /**
