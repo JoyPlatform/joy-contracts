@@ -2,7 +2,6 @@ pragma solidity ^0.4.11;
 
 import '../deposit/PlatformDeposit.sol';
 import '../math/SafeMath.sol';
-import '../token/ERC223ReceivingContract.sol';
 import '../ownership/Ownable.sol';
 import './JoyGameAbstract.sol';
 
@@ -25,7 +24,7 @@ contract JoyGameDemo is JoyGameAbstract {
     /**
      * @dev map containing information if given player have open game session.
      */
-    mapping(address => bool) public openSessions;
+    mapping(address => bool) openSessions;
 
 
     /**
@@ -35,45 +34,31 @@ contract JoyGameDemo is JoyGameAbstract {
      */
     PlatformDeposit m_playerDeposits;
 
-    /**
-     * gameDevAddr is a developer of a game, this address is needed at the end of each game session;
-     * part of players losses will be distributed to this address
-     */
-    address gameDevAddr;
 
     /**
-     * Main constructor
+     * Main constructor, that register source of value that will be used in games (depositContract)
+     * and developer of the game
      * @param _depositContract address of already deployed depositContract
      * @param _gameDev address of game creator
      */
     function JoyGameDemo(address _depositContract, address _gameDev) {
+
         m_playerDeposits = PlatformDeposit(_depositContract);
 
-        gameDevAddr = _gameDev;
-    }
+        // Require this contract and depositContract to be owned by the same address.
+        // This check prevents connecting to external malicious contract
+        require(m_playerDeposits.owner() == owner);
 
-    /**
-     * Override function
-     * @dev Function to access owner of this contract (external lowers the cost of gas)
-     */
-    function getOwner() external returns (address contractOwner) {
-        return owner;
-    }
-
-    /**
-     * Override function
-     * @dev Function to access game developer (external lowers the cost of gas)
-     */
-    function getGameDev() external returns (address owner) {
-        return gameDevAddr;
+        gameDev = _gameDev;
     }
 
     //----------------------------------------- start session -----------------------------------------
 
     /**
      * Override function
-     * @dev Function that receive tokens, from depositContract
-     * It will uses the same token that is use in given depositContract
+     * @dev Brings information about locked tokens from player_account on depositContract for the time of the game.
+     * @param _player Player address
+     * @param _value that will be given to the player in game session
      */
     function startGame(address _player, uint256 _value) external {
         // don't allow player to have two open sessions
@@ -82,18 +67,16 @@ contract JoyGameDemo is JoyGameAbstract {
         // Check if calling contract is registred as m_playerDeposits,
         // non registred contracts are not allowed to affect to this game contract
         require(msg.sender == address(m_playerDeposits));
-    }
 
-    /**
-     * Override function
-     * @dev Brings token from player_account on deposits contract to this contract, for the time of the game.
-     * @param _playerAddr Player address
-     */
-    function startGame(address _playerAddr, uint256 _value) internal {
-        // don't allow player to have two open sessions
-        require(openSessions[_playerAddr] == false);
+        openSessions[_player] = true;
 
-        lockedDeposit[_playerAddr] = lockedDeposit[_playerAddr].add(_value);
+        // Update lockedDeposit map with value that will be available for new game session
+        lockedDeposit[_player] = lockedDeposit[_player].add(_value);
+
+
+        // brodcast logs in blockchain about new session
+        // listening game server should start game after confirmation transaction containing execution of this function
+        NewGameSession(_player, _value);
     }
 
     //----------------------------------------- end session -------------------------------------------
@@ -111,20 +94,23 @@ contract JoyGameDemo is JoyGameAbstract {
     function endGame(GameOutcome _gameOutcome) internal {
         // double check if given player had possibility to play.
         // his lockedDeposit needed to be non-zero/positive.
-        require(lockedDeposit[_gameOutcome.playerAddr] > 0);
+        require(lockedDeposit[_gameOutcome.player] > 0);
 
         // Save initial player funds to local variable
         // (security reasons) we want to reset player lockedDeposit before actual Tokend distibiution
         uint256 gameLockedFunds;
 
         // unlock localy played funds
-        lockedDeposit[_gameOutcome.playerAddr] = 0;
+        lockedDeposit[_gameOutcome.player] = 0;
 
         // Initial wrapping and real Tokens distribiution in deposit contract
-        m_playerDeposits.accountGameResult(_gameOutcome.playerAddr, _gameOutcome.final_balance);
+        m_playerDeposits.accountGameResult(_gameOutcome.player, _gameOutcome.final_balance);
+
+
+        openSessions[_gameOutcome.player] = false;
 
         // populate finite game info in transaction logs
-        EndGameInfo(_gameOutcome.playerAddr,
+        EndGameInfo(_gameOutcome.player,
                     gameLockedFunds,
                     _gameOutcome.final_balance,
                     _gameOutcome.hashOfGameProcess);
