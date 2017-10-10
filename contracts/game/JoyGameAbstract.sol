@@ -3,7 +3,7 @@ pragma solidity ^0.4.11;
 import '../token/ERC223ReceivingContract.sol';
 import '../ownership/Ownable.sol';
 
-contract JoyGameAbstract is Ownable, ERC223ReceivingContract {
+contract JoyGameAbstract is Ownable {
 
     // External function to get access to the owner of the game contract
     function getOwner() external returns (address owner);
@@ -39,14 +39,5 @@ contract JoyGameAbstract is Ownable, ERC223ReceivingContract {
      */
     function endGame(GameOutcome _gameOutcome) internal;
 
-    /**
-     * Override function
-     * @dev Function that only throw exception, real functionality should be implementet in derived class.
-     * Added because of linearization reasons
-     */
-    function onTokenReceived(address _from, uint _value, bytes _data) {
-        // revert throw exception and prevents Tokens to be send in.
-        revert();
-    }
 }
 

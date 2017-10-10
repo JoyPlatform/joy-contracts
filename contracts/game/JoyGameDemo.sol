@@ -67,6 +67,7 @@ contract JoyGameDemo is JoyGameAbstract {
     function getGameDev() external returns (address owner) {
         return gameDevAddr;
     }
+
     //----------------------------------------- start session -----------------------------------------
 
     /**
@@ -74,12 +75,13 @@ contract JoyGameDemo is JoyGameAbstract {
      * @dev Function that receive tokens, from depositContract
      * It will uses the same token that is use in given depositContract
      */
-    function onTokenReceived(address _from, uint _value, bytes _data) public {
+    function startGame(address _player, uint256 _value) external {
+        // don't allow player to have two open sessions
+        require(openSessions[_player] == false);
 
-        // Check if we are receiving Tokens from depisot contract that we registred as m_playerDeposits
+        // Check if calling contract is registred as m_playerDeposits,
+        // non registred contracts are not allowed to affect to this game contract
         require(msg.sender == address(m_playerDeposits));
-
-        OnTokenReceived(_from, _value, _data);
     }
 
     /**

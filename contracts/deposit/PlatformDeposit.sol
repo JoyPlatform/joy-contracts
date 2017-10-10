@@ -15,10 +15,13 @@ import '../game/JoyGameAbstract.sol';
 contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     using SafeMath for uint;
 
+    // Token that is supported by this contract. Should be registred in constructor
     MultiContractAsset m_supportedToken;
+
 
     mapping(address => uint256) deposits;
     mapping(address => uint256) lockedFunds;
+
 
     /**
      * platformReserve - Main platform address and reserve for winnings
@@ -73,38 +76,34 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      * Important security check is that will work only if the owner of the game
      * will be same as the owner of this contract
      *
-     * @param _playerAddr address of registred player
+     * @param _player address of registred player
      * @param _gameContractAddress address to the game contract
-     * @param _data additionl data
      */
-    function transferToGame(address _playerAddr, address _gameContractAddress, bytes _data) onlyOwner {
+    function transferToGame(address _player, address _gameContractAddress) onlyOwner {
         // platformReserve is not allowed to play, this check prevents owner take possession of platformReserve
-        require(_playerAddr != platformReserve);
+        require(_player != platformReserve);
 
         // _gameContractAddress should be a contract, throw exception if owner will tries to transfer flunds to the individual address.
         // Require supported Token to have 'isContract' method.
         require(isContract(_gameContractAddress));
 
         // check if player have any funds in his deposit
-        require(deposits[_playerAddr] > 0);
+        require(deposits[_player] > 0);
 
         // Create local joyGame object using address of given gameContract.
         JoyGameAbstract joyGame = JoyGameAbstract(_gameContractAddress);
 
         // Require this contract and gameContract to be owned by the same address.
         // This check prevents interaction with this contract from external contracts
-        require(joyGame.getOwner() == owner);
+        require(joyGame.owner() == owner);
 
-        uint256 loc_fundsLocked = lockPlayerFunds(_playerAddr);
+        uint256 loc_fundsLocked = lockPlayerFunds(_player);
 
         // increase gameContract deposit for the time of the game
         // this funds are locked, and can not even be withdraw by owner
         deposits[_gameContractAddress] = deposits[_gameContractAddress].add(loc_fundsLocked);
 
-        joyGame.onTokenReceived(_playerAddr, loc_fundsLocked, _data);
-
-        // Populate event
-        OnTokenReceived(msg.sender, loc_fundsLocked, _data);
+        joyGame.startGame(_player, loc_fundsLocked);
     }
 
     /**
@@ -152,7 +151,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
 
         // check if game contract is allowed to interact with this contract
         // must be the same owner
-        require(joyGame.getOwner() == owner);
+        require(joyGame.owner() == owner);
 
         // case where player deposit does not change
         if(_final_balance == lockedFunds[_playerAddr]) {
@@ -173,7 +172,12 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
         }
         // case where player lose
         else {
-            uint256 playerLoss = lockedFunds[_playerAddr].sub(_final_balance);
+            // substract player loss from player locked funds
+            lockedFunds[_playerAddr] = lockedFunds[_playerAddr].sub(_final_balance);
+            uint256 playerLoss = lockedFunds[_playerAddr];
+
+            // unlock player funds that were not lose
+            unlockPlayerFunds(_playerAddr);
 
             // distribute player Token loss to gameDev and platformReserve in 1:1 ratio
             // for odd loss additional Token goes to platformReserve
@@ -184,7 +188,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
             // double check
             require( (gameDeveloperPart + platformReservePart) == playerLoss );
 
-            address loc_gameDev = joyGame.getGameDev();
+            address loc_gameDev = joyGame.gameDev();
 
             deposits[loc_gameDev] = deposits[loc_gameDev].add(gameDeveloperPart);
             deposits[platformReserve] = deposits[platformReserve].add(platformReservePart);
