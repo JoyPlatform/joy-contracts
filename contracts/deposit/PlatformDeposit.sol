@@ -12,7 +12,7 @@ import '../game/JoyGameAbstract.sol';
  * In demo version only playing in on game at the same time is allowed,
  * so locks, unlocks, and transfer function operate on all player deposit.
  */
-contract tokenDeposit is ERC223ReceivingContract, Ownable {
+contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     using SafeMath for uint;
 
     MultiContractAsset m_supportedToken;
@@ -31,7 +31,7 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
      * @dev Constructor
      * @param _supportedToken The address of token contract that will be supported as players deposit
      */
-    function tokenDeposit(address _supportedToken, address _platformReserve) {
+    function PlatformDeposit(address _supportedToken, address _platformReserve) {
         // owner need to be separated from _platformReserve
         require(owner != _platformReserve);
 

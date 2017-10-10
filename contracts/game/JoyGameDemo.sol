@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
 
-import '../deposit/tokenDeposit.sol';
+import '../deposit/PlatformDeposit.sol';
 import '../math/SafeMath.sol';
 import '../token/ERC223ReceivingContract.sol';
 import '../ownership/Ownable.sol';
@@ -33,7 +33,7 @@ contract JoyGameDemo is JoyGameAbstract {
      * deposit contract also contain information about supported token,
      * that will be supported also in this contract.
      */
-    tokenDeposit m_playerDeposits;
+    PlatformDeposit m_playerDeposits;
 
     /**
      * gameDevAddr is a developer of a game, this address is needed at the end of each game session;
@@ -47,7 +47,7 @@ contract JoyGameDemo is JoyGameAbstract {
      * @param _gameDev address of game creator
      */
     function JoyGameDemo(address _depositContract, address _gameDev) {
-        m_playerDeposits = tokenDeposit(_depositContract);
+        m_playerDeposits = PlatformDeposit(_depositContract);
 
         gameDevAddr = _gameDev;
     }
