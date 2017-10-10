@@ -6,12 +6,19 @@ import '../token/ERC223ReceivingContract.sol';
 import '../ownership/Ownable.sol';
 import '../game/JoyGameAbstract.sol';
 
+/**
+ * Main token deposit contract.
+ *
+ * In demo version only playing in on game at the same time is allowed,
+ * so locks, unlocks, and transfer function operate on all player deposit.
+ */
 contract tokenDeposit is ERC223ReceivingContract, Ownable {
     using SafeMath for uint;
 
     MultiContractAsset m_supportedToken;
 
     mapping(address => uint256) deposits;
+    mapping(address => uint256) lockedFunds;
 
     // debug
     address public dbg_tokenAddr;
@@ -75,19 +82,18 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
      *
      * @param _playerAddr address of registred player
      * @param _gameContractAddress address to the game contract
-     * @param _value amount of Tokens that will be transfered
      * @param _data additionl data
      */
-    function transferToGame(address _playerAddr, address _gameContractAddress, uint _value, bytes _data) onlyOwner {
+    function transferToGame(address _playerAddr, address _gameContractAddress, bytes _data) onlyOwner {
         // platformReserve is not allowed to play, this check prevents owner take possession of platformReserve
         require(_playerAddr != platformReserve);
-
-        // check if player have requested _value in his deposit
-        require(_value <= deposits[_playerAddr]);
 
         // _gameContractAddress should be a contract, throw exception if owner will tries to transfer flunds to the individual address.
         // Require supported Token to have 'isContract' method.
         require(isContract(_gameContractAddress));
+
+        // check if player have any funds in his deposit
+        require(deposits[_playerAddr] > 0);
 
         // Create local joyGame object using address of given gameContract.
         JoyGameAbstract joyGame = JoyGameAbstract(_gameContractAddress);
@@ -96,17 +102,101 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
         // This check prevents interaction with this contract from external contracts
         require(joyGame.getOwner() == owner);
 
-        deposits[_playerAddr] = deposits[_playerAddr].sub(_value);
+        uint256 loc_fundsLocked = lockPlayerFunds(_playerAddr);
 
         // increase gameContract deposit for the time of the game
-        // this funds are locked, and even can not be withdraw by owner
-        deposits[_gameContractAddress] = deposits[_gameContractAddress].add(_value);
+        // this funds are locked, and can not even be withdraw by owner
+        deposits[_gameContractAddress] = deposits[_gameContractAddress].add(loc_fundsLocked);
 
+        joyGame.onTokenReceived(_playerAddr, loc_fundsLocked, _data);
 
-        joyGame.onTokenReceived(msg.sender, _value, _data);
+        // Populate event
+        OnTokenReceived(msg.sender, loc_fundsLocked, _data);
+    }
 
-        // Event
-        OnTokenReceived(msg.sender, _value, _data);
+    /**
+     * @dev  move given _value from player deposit to lockedFunds map.
+     * Should be unlocked only after end of the game session (accountGameResult function).
+     */
+    function lockPlayerFunds(address _playerAddr) internal returns (uint256 locked) {
+        uint256 player_deposit = deposits[_playerAddr];
+        deposits[_playerAddr] = deposits[_playerAddr].sub(player_deposit);
+
+        // check if player funds was locked successfully
+        require(deposits[_playerAddr] == 0);
+
+        lockedFunds[_playerAddr] = lockedFunds[_playerAddr].add(player_deposit);
+
+        return lockedFunds[_playerAddr];
+    }
+
+    /**
+     * @dev internal function that unlocks player funds.
+     * Used in accountGameResult after
+     */
+    function unlockPlayerFunds(address _playerAddr) internal returns (uint256 unlocked) {
+        uint256 player_lockedFunds = lockedFunds[_playerAddr];
+        lockedFunds[_playerAddr] = lockedFunds[_playerAddr].sub(player_lockedFunds);
+
+        // check if player funds was unlocked successfully
+        require(lockedFunds[_playerAddr] == 0);
+
+        deposits[_playerAddr] = deposits[_playerAddr].add(player_lockedFunds);
+
+        return deposits[_playerAddr];
+    }
+
+    /**
+     * @dev function that can be called from registred 'game contract' after closing player session to update state.
+     *
+     * Unlock Tokens from game contract and distribute Tokens according to final balance.
+     * @param _playerAddr address of player that end his game session
+     * @param _final_balance value that determine player wins and losses
+     */
+    function accountGameResult(address _playerAddr, uint256 _final_balance) external {
+
+        JoyGameAbstract joyGame = JoyGameAbstract(msg.sender);
+
+        // check if game contract is allowed to interact with this contract
+        // must be the same owner
+        require(joyGame.getOwner() == owner);
+
+        // case where player deposit does not change
+        if(_final_balance == lockedFunds[_playerAddr]) {
+            unlockPlayerFunds(_playerAddr);
+        }
+        // case where player wins
+        else if (_final_balance > lockedFunds[_playerAddr]) {
+            uint256 playerEarnings = _final_balance.sub(lockedFunds[_playerAddr]);
+
+            // check if contract is able to pay player a win
+            require(playerEarnings <= deposits[platformReserve]);
+
+            // unlock player funds with additional win from platformReserve
+            unlockPlayerFunds(_playerAddr);
+
+            deposits[platformReserve] = deposits[platformReserve].sub(playerEarnings);
+            deposits[_playerAddr] = deposits[_playerAddr].add(playerEarnings);
+        }
+        // case where player lose
+        else {
+            uint256 playerLoss = lockedFunds[_playerAddr].sub(_final_balance);
+
+            // distribute player Token loss to gameDev and platformReserve in 1:1 ratio
+            // for odd loss additional Token goes to platformReserve
+            // (example loss = 3 is gameDevPart = 1 and platformReserve = 2)
+            uint256 gameDeveloperPart = playerLoss.div(2);
+            uint256 platformReservePart = playerLoss.sub(gameDeveloperPart);
+
+            // double check
+            require( (gameDeveloperPart + platformReservePart) == playerLoss );
+
+            address loc_gameDev = joyGame.gameDev;
+
+            deposits[loc_gameDev] = deposits[loc_gameDev].add(gameDeveloperPart);
+            deposits[platformReserve] = deposits[platformReserve].add(platformReservePart);
+        }
+
     }
 
     /**
