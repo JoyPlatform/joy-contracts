@@ -6,6 +6,8 @@ import '../token/ERC223ReceivingContract.sol';
 import '../ownership/Ownable.sol';
 import './JoyGameAbstract.sol';
 
+
+
 /**
  * @title JoyGameDemo
  * Contract that is responsible only for one game, and uses external given deposit contract
@@ -19,6 +21,12 @@ contract JoyGameDemo is JoyGameAbstract {
      * for the time of the game, and waiting for game outcome.
      */
     mapping(address => uint256) lockedDeposit;
+
+    /**
+     * @dev map containing information if given player have open game session.
+     */
+    mapping(address => bool) public openSessions;
+
 
     /**
      * Deposit contract that manage players funds in long-term,
@@ -54,16 +62,23 @@ contract JoyGameDemo is JoyGameAbstract {
 
     /**
      * Override function
+     * @dev Function to access game developer (external lowers the cost of gas)
+     */
+    function getGameDev() external returns (address owner) {
+        return gameDevAddr;
+    }
+    //----------------------------------------- start session -----------------------------------------
+
+    /**
+     * Override function
      * @dev Function that receive tokens, from depositContract
      * It will uses the same token that is use in given depositContract
      */
     function onTokenReceived(address _from, uint _value, bytes _data) public {
 
-        // get address of depositContract
+        // Check if we are receiving Tokens from depisot contract that we registred as m_playerDeposits
         require(msg.sender == address(m_playerDeposits));
-        //TODO make sure about other needed requirements!
 
-        lockedDeposit[_from] = lockedDeposit[_from].add(_value);
         OnTokenReceived(_from, _value, _data);
     }
 
@@ -72,18 +87,45 @@ contract JoyGameDemo is JoyGameAbstract {
      * @dev Brings token from player_account on deposits contract to this contract, for the time of the game.
      * @param _playerAddr Player address
      */
-    function startGame(address _playerAddr) {
-        // throw exception if player balance equals zero
-        require(0 < m_playerDeposits.balanceOfPlayer(_playerAddr));
+    function startGame(address _playerAddr, uint256 _value) internal {
+        // don't allow player to have two open sessions
+        require(openSessions[_playerAddr] == false);
+
+        lockedDeposit[_playerAddr] = lockedDeposit[_playerAddr].add(_value);
+    }
+
+    //----------------------------------------- end session -------------------------------------------
+
+    function responseFromWS(address _playerAddr, uint256 _final_balance, bytes32 hashOfGameProcess) onlyOwner {
+        endGame( GameOutcome(_playerAddr, _final_balance, hashOfGameProcess) );
     }
 
     /**
      * Override function
      * @dev Save provable outcome of the game and distribute Tokens to gameDev, platform, and player
-     * @param _gameOutcome last updated amount of the WS wallets along with the Hash
+     * @param _gameOutcome struct with last updated amount of the WS wallets along with the Hash of provable data
      */
-    function endGame(bytes _gameOutcome) onlyOwner {
-    // only for test TODO remove
-        lockedDeposit[address(m_playerDeposits)] += 10;
+
+    function endGame(GameOutcome _gameOutcome) internal {
+        // double check if given player had possibility to play.
+        // his lockedDeposit needed to be non-zero/positive.
+        require(lockedDeposit[_gameOutcome.playerAddr] > 0);
+
+        // Save initial player funds to local variable
+        // (security reasons) we want to reset player lockedDeposit before actual Tokend distibiution
+        uint256 gameLockedFunds;
+
+        // unlock localy played funds
+        lockedDeposit[_gameOutcome.playerAddr] = 0;
+
+        // Initial wrapping and real Tokens distribiution in deposit contract
+        m_playerDeposits.accountGameResult(_gameOutcome.playerAddr, _gameOutcome.final_balance);
+
+        // populate finite game info in transaction logs
+        EndGameInfo(_gameOutcome.playerAddr,
+                    gameLockedFunds,
+                    _gameOutcome.final_balance,
+                    _gameOutcome.hashOfGameProcess);
     }
 }
+
