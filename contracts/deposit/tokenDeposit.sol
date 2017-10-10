@@ -20,11 +20,6 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
     mapping(address => uint256) deposits;
     mapping(address => uint256) lockedFunds;
 
-    // debug
-    address public dbg_tokenAddr;
-    address public dbg_senderAddr;
-    // debug
-
     /**
      * platformReserve - Main platform address and reserve for winnings
      * Important address that collecting part of players losses as reserve which players will get thier winnings.
@@ -61,8 +56,6 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
     function onTokenReceived(address _from, uint _value, bytes _data) public {
         // msg.sender is a token-contract address here
         // we will use this information to filter what token we accept as deposit
-        dbg_tokenAddr = address(m_supportedToken);
-        dbg_senderAddr = msg.sender;
 
         // get address of supported token
         require(msg.sender == address(m_supportedToken));
@@ -191,7 +184,7 @@ contract tokenDeposit is ERC223ReceivingContract, Ownable {
             // double check
             require( (gameDeveloperPart + platformReservePart) == playerLoss );
 
-            address loc_gameDev = joyGame.gameDev;
+            address loc_gameDev = joyGame.getGameDev();
 
             deposits[loc_gameDev] = deposits[loc_gameDev].add(gameDeveloperPart);
             deposits[platformReserve] = deposits[platformReserve].add(platformReservePart);
