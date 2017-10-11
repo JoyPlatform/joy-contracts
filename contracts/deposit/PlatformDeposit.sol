@@ -28,7 +28,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      * Important address that collecting part of players losses as reserve which players will get thier winnings.
      * For security reasons "platform reserve address" needs to be separated/other that address of owner of this contract.
      */
-    address platformReserve;
+    address public platformReserve;
 
     /**
      * @dev Constructor
@@ -44,11 +44,20 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
 
     /**
      * @dev Gets the balance of the specified address.
-     * @param _playerAddr The address to query the the balance of.
+     * @param _player The address to query the the balance of.
      * @return An uint256 representing the amount owned by the passed address.
      */
-    function balanceOfPlayer(address _playerAddr) public constant returns (uint256) {
-        return deposits[_playerAddr];
+    function balanceOfPlayer(address _player) public constant returns (uint256) {
+        return deposits[_player];
+    }
+
+    /**
+     * @dev Gets the locked funds of the specified address.
+     * @param _player Player address.
+     * @return An uint256 representing the amount of locked tokens.
+     */
+    function playerLockedFunds(address _player) public constant returns (uint256) {
+        return lockedFunds[_player];
     }
 
     /**
