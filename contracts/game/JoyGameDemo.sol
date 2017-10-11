@@ -61,6 +61,9 @@ contract JoyGameDemo is JoyGameAbstract {
      * @param _value that will be given to the player in game session
      */
     function startGame(address _player, uint256 _value) external {
+        // only registred depositContract is allowed to execute this function
+        require(msg.sender == address(m_playerDeposits));
+
         // don't allow player to have two open sessions
         require(openSessions[_player] == false);
 
