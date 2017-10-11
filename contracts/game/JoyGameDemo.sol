@@ -17,14 +17,14 @@ contract JoyGameDemo is JoyGameAbstract {
     /**
      * @dev mapping that contain information about locked Tokens
      * mapping of funds that are locked inside of this contract,
-     * for the time of the game, and waiting for game outcome.
+     * for the time of the game waiting for game outcome.
      */
-    mapping(address => uint256) lockedDeposit;
+    mapping(address => uint256) public lockedDeposit;
 
     /**
      * @dev map containing information if given player have open game session.
      */
-    mapping(address => bool) openSessions;
+    mapping(address => bool) public openSessions;
 
 
     /**
