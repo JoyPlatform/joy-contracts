@@ -173,8 +173,11 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
         // case where player lose
         else {
             // substract player loss from player locked funds
-            lockedFunds[_playerAddr] = lockedFunds[_playerAddr].sub(_final_balance);
-            uint256 playerLoss = lockedFunds[_playerAddr];
+            uint256 playerLoss = lockedFunds[_playerAddr].sub(_final_balance);
+            lockedFunds[_playerAddr] = lockedFunds[_playerAddr].sub(playerLoss);
+
+            // double check
+            require(lockedFunds[_playerAddr] == _final_balance);
 
             // unlock player funds that were not lose
             unlockPlayerFunds(_playerAddr);
