@@ -1,11 +1,16 @@
 # builds and cache
 build
+core
 .cache/
 tests/__pycache__/
 
 # populus configuration file
 populus.json
+gethipc.config
 
 # populus deployment registy
 registrar.json
+
+# populus logs
+logs
 
