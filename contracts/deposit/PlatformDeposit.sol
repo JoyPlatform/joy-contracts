@@ -1,7 +1,7 @@
 pragma solidity ^0.4.11;
 
 import '../math/SafeMath.sol';
-import '../token/MultiContractAsset.sol';
+import '../token/JoyAsset.sol';
 import '../token/ERC223ReceivingContract.sol';
 import '../ownership/Ownable.sol';
 import '../game/JoyGameAbstract.sol';
@@ -16,7 +16,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     using SafeMath for uint;
 
     // Token that is supported by this contract. Should be registred in constructor
-    MultiContractAsset m_supportedToken;
+    JoyAsset m_supportedToken;
 
 
     mapping(address => uint256) deposits;
@@ -39,7 +39,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
         require(owner != _platformReserve);
 
         platformReserve = _platformReserve;
-        m_supportedToken = MultiContractAsset(_supportedToken);
+        m_supportedToken = JoyAsset(_supportedToken);
     }
 
     /**
