@@ -84,8 +84,8 @@ contract JoyGameDemo is JoyGameAbstract {
 
     //----------------------------------------- end session -------------------------------------------
 
-    function responseFromWS(address _playerAddr, uint256 _final_balance, bytes32 hashOfGameProcess) onlyOwner {
-        endGame( GameOutcome(_playerAddr, _final_balance, hashOfGameProcess) );
+    function responseFromWS(address _playerAddr, uint256 _finalBalance, bytes32 hashOfGameProcess) onlyOwner {
+        endGame( GameOutcome(_playerAddr, _finalBalance, hashOfGameProcess) );
     }
 
     /**
@@ -107,7 +107,7 @@ contract JoyGameDemo is JoyGameAbstract {
         lockedDeposit[_gameOutcome.player] = 0;
 
         // Initial wrapping and real Tokens distribiution in deposit contract
-        m_playerDeposits.accountGameResult(_gameOutcome.player, _gameOutcome.final_balance);
+        m_playerDeposits.accountGameResult(_gameOutcome.player, _gameOutcome.finalBalance);
 
 
         openSessions[_gameOutcome.player] = false;
@@ -115,7 +115,7 @@ contract JoyGameDemo is JoyGameAbstract {
         // populate finite game info in transaction logs
         EndGameInfo(_gameOutcome.player,
                     gameLockedFunds,
-                    _gameOutcome.final_balance,
+                    _gameOutcome.finalBalance,
                     _gameOutcome.hashOfGameProcess);
     }
 }

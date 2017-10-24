@@ -152,9 +152,9 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      *
      * Unlock Tokens from game contract and distribute Tokens according to final balance.
      * @param _playerAddr address of player that end his game session
-     * @param _final_balance value that determine player wins and losses
+     * @param _finalBalance value that determine player wins and losses
      */
-    function accountGameResult(address _playerAddr, uint256 _final_balance) external {
+    function accountGameResult(address _playerAddr, uint256 _finalBalance) external {
 
         JoyGameAbstract joyGame = JoyGameAbstract(msg.sender);
 
@@ -163,12 +163,12 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
         require(joyGame.owner() == owner);
 
         // case where player deposit does not change
-        if(_final_balance == lockedFunds[_playerAddr]) {
+        if(_finalBalance == lockedFunds[_playerAddr]) {
             unlockPlayerFunds(_playerAddr);
         }
         // case where player wins
-        else if (_final_balance > lockedFunds[_playerAddr]) {
-            uint256 playerEarnings = _final_balance.sub(lockedFunds[_playerAddr]);
+        else if (_finalBalance > lockedFunds[_playerAddr]) {
+            uint256 playerEarnings = _finalBalance.sub(lockedFunds[_playerAddr]);
 
             // check if contract is able to pay player a win
             require(playerEarnings <= deposits[platformReserve]);
@@ -182,11 +182,11 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
         // case where player lose
         else {
             // substract player loss from player locked funds
-            uint256 playerLoss = lockedFunds[_playerAddr].sub(_final_balance);
+            uint256 playerLoss = lockedFunds[_playerAddr].sub(_finalBalance);
             lockedFunds[_playerAddr] = lockedFunds[_playerAddr].sub(playerLoss);
 
             // double check
-            require(lockedFunds[_playerAddr] == _final_balance);
+            require(lockedFunds[_playerAddr] == _finalBalance);
 
             // unlock player funds that were not lose
             unlockPlayerFunds(_playerAddr);

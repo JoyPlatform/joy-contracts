@@ -15,7 +15,7 @@ contract JoyGameAbstract is Ownable {
     event NewGameSession(address player, uint256 start_balance);
 
     // Event that will broadcast in blockchain information about finite game session
-    event EndGameInfo(address player, uint256 start_balance, uint256 final_balance, bytes32 hashOfGameProcess);
+    event EndGameInfo(address player, uint256 start_balance, uint256 finalBalance, bytes32 hashOfGameProcess);
 
 
     /**
@@ -32,7 +32,7 @@ contract JoyGameAbstract is Ownable {
      */
     struct GameOutcome {
         address player;
-        uint256 final_balance;
+        uint256 finalBalance;
         // Hashed course of the finite game
         bytes32 hashOfGameProcess;
     }
