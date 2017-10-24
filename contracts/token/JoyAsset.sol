@@ -43,7 +43,6 @@ contract JoyAsset is StandardToken {
         if (isContract(_to)) {
             ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
             receiver.onTokenReceived(msg.sender, _value, _data);
-            return true;
         }
         Transfer(msg.sender, _to, _value, _data);
         return true;
@@ -66,7 +65,6 @@ contract JoyAsset is StandardToken {
 
             ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
             receiver.onTokenReceived(msg.sender, _value, _empty_data);
-            return true;
         }
         Transfer(msg.sender, _to, _value);
         return true;
