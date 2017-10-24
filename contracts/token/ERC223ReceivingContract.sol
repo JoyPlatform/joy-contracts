@@ -1,16 +1,16 @@
 pragma solidity ^0.4.11;
 
-/**
- * Contract that is working with tokens which implements erc233 transfers features
+ /**
+ * @title Contract that will work with ERC223 tokens.
  */
+
 contract ERC223ReceivingContract {
-	// Event that inform about recieved tokens
-	event OnTokenReceived(address _from, uint value, bytes indexed data);
-
-	/**
-	 * dox TODO
-	 */
-	function onTokenReceived(address _from, uint _value, bytes _data);
+/**
+ * @dev Standard ERC223 function that will handle incoming token transfers.
+ *
+ * @param _from  Token sender address.
+ * @param _value Amount of tokens.
+ * @param _data  Transaction metadata.
+ */
+    function onTokenReceived(address _from, uint _value, bytes _data) external;
 }
-
-
