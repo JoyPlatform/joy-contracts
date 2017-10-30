@@ -18,10 +18,8 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     // Token that is supported by this contract. Should be registred in constructor
     JoyAsset m_supportedToken;
 
-
     mapping(address => uint256) deposits;
     mapping(address => uint256) lockedFunds;
-
 
     /**
      * platformReserve - Main platform address and reserve for winnings
@@ -79,10 +77,10 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     /**
      * @dev Temporarily transfer funds to the game contract
      *
-     * This method can be used only by the owner of this contract.
+     * This method can be used to lock funds in order to perform specific actions by external contract.
      * That contruct allow to adding new games without modyfing this contract.
-     * Important security check is that will work only if the owner of the game
-     * will be same as the owner of this contract
+     * Important security check is that execution of this method will work:
+     *  only if the owner of the game will be same as the owner of this contract
      *
      * @param _player address of registred player
      * @param _gameContractAddress address to the game contract
@@ -240,4 +238,3 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
         return (codeLength > 0);
     }
 }
-
