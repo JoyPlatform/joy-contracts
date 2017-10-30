@@ -15,13 +15,6 @@ contract JoyGameDemo is JoyGameAbstract {
     using SafeMath for uint;
 
     /**
-     * @dev mapping that contain information about locked Tokens
-     * mapping of funds that are locked inside of this contract,
-     * for the time of the game waiting for game outcome.
-     */
-    mapping(address => uint256) public lockedDeposit;
-
-    /**
      * @dev map containing information if given player have open game session.
      */
     mapping(address => bool) public openSessions;
@@ -34,6 +27,14 @@ contract JoyGameDemo is JoyGameAbstract {
      */
     PlatformDeposit m_playerDeposits;
 
+
+    /**
+     * @dev get amount of locked funds from coresponding to this contracti, deposit contract
+     * Funds that are locked for the time of the game and waiting for game outcome.
+     */
+    function playerLockedFunds(address _player) public view returns (uint256) {
+        return m_playerDeposits.playerLockedFunds(_player);
+    }
 
     /**
      * Main constructor, that register source of value that will be used in games (depositContract)
@@ -73,10 +74,6 @@ contract JoyGameDemo is JoyGameAbstract {
 
         openSessions[_player] = true;
 
-        // Update lockedDeposit map with value that will be available for new game session
-        lockedDeposit[_player] = lockedDeposit[_player].add(_value);
-
-
         // brodcast logs in blockchain about new session
         // listening game server should start game after confirmation transaction containing execution of this function
         NewGameSession(_player, _value);
@@ -95,21 +92,17 @@ contract JoyGameDemo is JoyGameAbstract {
      */
 
     function endGame(GameOutcome _gameOutcome) internal {
+        // Save initial player funds to stack variable
+        uint256 gameLockedFunds = playerLockedFunds(_gameOutcome.player);
+
         // double check if given player had possibility to play.
         // his lockedDeposit needed to be non-zero/positive.
-        require(lockedDeposit[_gameOutcome.player] > 0);
-
-        // Save initial player funds to local variable
-        // (security reasons) we want to reset player lockedDeposit before actual Tokend distibiution
-        uint256 gameLockedFunds;
-
-        // unlock localy played funds
-        lockedDeposit[_gameOutcome.player] = 0;
+        require(gameLockedFunds > 0);
 
         // Initial wrapping and real Tokens distribiution in deposit contract
         m_playerDeposits.accountGameResult(_gameOutcome.player, _gameOutcome.finalBalance);
 
-
+        // close player game session
         openSessions[_gameOutcome.player] = false;
 
         // populate finite game info in transaction logs
