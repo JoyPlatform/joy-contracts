@@ -16,7 +16,7 @@ def deployDemoContracts():
     with project.get_chain(chain_name) as chain:
 
         # Load Populus contract proxy classes
-        JoyAsset = chain.provider.get_contract_factory('JoyAsset')
+        JoyToken = chain.provider.get_contract_factory('JoyToken')
         PlatformDeposit = chain.provider.get_contract_factory('PlatformDeposit')
         JoyGameDemo = chain.provider.get_contract_factory('JoyGameDemo')
 
@@ -37,7 +37,7 @@ def deployDemoContracts():
         #print("acc locked: {}".format(is_account_locked(web3,ownerAddr)))
 
         # Deploy token contract
-        txhash_token = JoyAsset.deploy(transaction={"from": ownerAddr})
+        txhash_token = JoyToken.deploy(transaction={"from": ownerAddr})
         print("deploying token, tx hash is", txhash_token)
         receipt = utils.check_succesful_tx(web3, txhash_token)
         token_address = receipt["contractAddress"]
@@ -63,7 +63,7 @@ def deployDemoContracts():
         print("DemoGame contract address is", game_address)
 
         # Do some contract reads to see everything looks ok
-        # print("Token total supply is: ", JoyAsset.call().totalSupply())
+        # print("Token total supply is: ", JoyToken.call().totalSupply())
         # print("Deposit owner is: ", PlatformDeposit.call().owner())
         # print("Game developer is: ", JoyGameDemo.call().gameDev())
 

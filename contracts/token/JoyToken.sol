@@ -9,18 +9,18 @@ import './ERC223ReceivingContract.sol';
  * Simple version where all tokens are pre-assigned to the creator.
  * `StandardToken` functions.
  */
-contract JoyAsset is StandardToken {
+contract JoyToken is StandardToken {
 
-  string public constant name = "JoyAsset";
-  string public constant symbol = "JAS";
-  uint8 public constant decimals = 4;
+  string public constant name = "JoyToken";
+  string public constant symbol = "JOY";
+  uint8 public constant decimals = 18;
 
-  uint256 public constant INITIAL_SUPPLY = 21000 * (10 ** uint256(decimals));
+  uint256 public constant INITIAL_SUPPLY = 21000000 * (10 ** uint256(decimals));
 
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
-    function JoyAsset() public {
+    function JoyToken() public {
         totalSupply = INITIAL_SUPPLY;           // update total supply
         balances[msg.sender] = INITIAL_SUPPLY;  // give the creator all initial tokens
     }
