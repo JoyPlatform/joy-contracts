@@ -12,11 +12,10 @@ contract JoyGameAbstract is Ownable {
     address public gameDev;
 
     // Event that will broadcast in blockchain information about new game session
-    event NewGameSession(address player, uint256 start_balance);
+    event NewGameSession(address indexed player, uint256 start_balance);
 
     // Event that will broadcast in blockchain information about finite game session
-    event EndGameInfo(address player, uint256 start_balance, uint256 finalBalance, bytes32 hashOfGameProcess);
-
+    event EndGameInfo(address indexed player, uint256 start_balance, uint256 finalBalance, bytes32 indexed hashOfGameProcess);
 
     /**
      * @dev Abstract external function that starts game session.
@@ -24,7 +23,6 @@ contract JoyGameAbstract is Ownable {
      * @param _value that will be given to the player in game session
      */
     function startGame(address _playerAddr, uint256 _value) external;
-
 
     /**
      * @dev struct containg outcome of the game, with provable hash, that could be match with game history in GS
@@ -44,4 +42,3 @@ contract JoyGameAbstract is Ownable {
     function endGame(GameOutcome _gameOutcome) internal;
 
 }
-
