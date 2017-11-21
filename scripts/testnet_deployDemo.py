@@ -63,9 +63,16 @@ def deployDemoContracts():
         print("DemoGame contract address is", game_address)
 
         # Do some contract reads to see everything looks ok
-        # print("Token total supply is: ", JoyToken.call().totalSupply())
-        # print("Deposit owner is: ", PlatformDeposit.call().owner())
-        # print("Game developer is: ", JoyGameDemo.call().gameDev())
+        print("Some checks on deployed contracts:")
+        print("Token name: ", JoyToken.call({'to':token_address}).name())
+        print("Token symbol: ", JoyToken.call({'to':token_address}).symbol())
+        print("Token total supply is: ", JoyToken.call({'to':token_address}).totalSupply())
+        print("Token decimal places: ", JoyToken.call({'to':token_address}).decimals())
+        print("Deposit owner is: ", PlatformDeposit.call({'to':deposit_address}).owner())
+        print("Deposit platformReserve address: ", PlatformDeposit.call({'to':deposit_address}).platformReserve())
+        print("Deposit supported Token address: ", PlatformDeposit.call({'to':deposit_address}).m_supportedToken())
+        print("Game developer is: ", JoyGameDemo.call({'to':game_address}).gameDev())
+        print("Game contract using deposit (address): ", JoyGameDemo.call({'to':game_address}).m_playerDeposits())
 
 
 
