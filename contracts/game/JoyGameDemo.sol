@@ -19,14 +19,12 @@ contract JoyGameDemo is JoyGameAbstract {
      */
     mapping(address => bool) public openSessions;
 
-
     /**
      * Deposit contract that manage players funds in long-term,
      * deposit contract also contain information about supported token,
      * that will be supported also in this contract.
      */
-    PlatformDeposit m_playerDeposits;
-
+    PlatformDeposit public m_playerDeposits;
 
     /**
      * @dev get amount of locked funds from coresponding to this contracti, deposit contract
@@ -112,4 +110,3 @@ contract JoyGameDemo is JoyGameAbstract {
                     _gameOutcome.hashOfGameProcess);
     }
 }
-

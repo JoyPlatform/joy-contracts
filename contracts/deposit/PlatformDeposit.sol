@@ -16,7 +16,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     using SafeMath for uint;
 
     // Token that is supported by this contract. Should be registred in constructor
-    JoyToken m_supportedToken;
+    JoyToken public m_supportedToken;
 
     mapping(address => uint256) deposits;
     mapping(address => uint256) lockedFunds;
