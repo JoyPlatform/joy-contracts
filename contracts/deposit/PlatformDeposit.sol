@@ -15,7 +15,7 @@ import '../game/JoyGameAbstract.sol';
 contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     using SafeMath for uint;
 
-    // Token that is supported by this contract. Should be registred in constructor
+    // Token that is supported by this contract. Should be registered in constructor
     JoyToken public m_supportedToken;
 
     mapping(address => uint256) deposits;
@@ -23,7 +23,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
 
     /**
      * platformReserve - Main platform address and reserve for winnings
-     * Important address that collecting part of players losses as reserve which players will get thier winnings.
+     * Important address that collecting part of players losses as reserve which players will get winnings.
      * For security reasons "platform reserve address" needs to be separated/other that address of owner of this contract.
      */
     address public platformReserve;
@@ -60,7 +60,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
 
     /**
      * @dev Function that receive tokens, throw exception if tokens is not supported.
-     * This contract could recieve tokens, using functionalities designed in erc223 standard.
+     * This contract could receive tokens, using functionalities designed in erc223 standard.
      * !! works only with tokens designed in erc223 way.
      */
     function onTokenReceived(address _from, uint _value, bytes _data) external {
@@ -78,18 +78,18 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      * @dev Temporarily transfer funds to the game contract
      *
      * This method can be used to lock funds in order to perform specific actions by external contract.
-     * That contruct allow to adding new games without modyfing this contract.
+     * That construct allow to adding new games without modifying this contract.
      * Important security check is that execution of this method will work:
      *  only if the owner of the game will be same as the owner of this contract
      *
-     * @param _player address of registred player
+     * @param _player address of registered player
      * @param _gameContractAddress address to the game contract
      */
     function transferToGame(address _player, address _gameContractAddress) onlyOwner {
         // platformReserve is not allowed to play, this check prevents owner take possession of platformReserve
         require(_player != platformReserve);
 
-        // _gameContractAddress should be a contract, throw exception if owner will tries to transfer flunds to the individual address.
+        // _gameContractAddress should be a contract, throw exception if owner will tries to transfer funds to the individual address.
         // Require supported Token to have 'isContract' method.
         require(isContract(_gameContractAddress));
 
@@ -145,7 +145,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     }
 
     /**
-     * @dev function that can be called from registred 'game contract' after closing player session to update state.
+     * @dev function that can be called from registered 'game contract' after closing player session to update state.
      *
      * Unlock Tokens from game contract and distribute Tokens according to final balance.
      * @param _playerAddr address of player that end his game session
@@ -206,11 +206,11 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     }
 
     /**
-     * @dev Function that could be executed by players to withdraw thier deposit
+     * @dev Function that could be executed by players to withdraw their deposit
      */
     function payOut(address _to, uint256 _value) {
         // use transfer function from supported token.
-        // should be used from player address that was registred in deposits
+        // should be used from player address that was registered in deposits
         require(_value <= deposits[msg.sender]);
 
         /**
@@ -223,7 +223,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
 
         deposits[msg.sender] = deposits[msg.sender].sub(_value);
 
-        // Use m_supportedToken metheod to transfer real Tokens.
+        // Use m_supportedToken method to transfer real Tokens.
         m_supportedToken.transfer(_to, _value);
     }
 
