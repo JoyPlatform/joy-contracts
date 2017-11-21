@@ -5,6 +5,7 @@ core
 tests/__pycache__/
 
 # populus configuration file
+project.json
 populus.json
 gethipc.config
 
