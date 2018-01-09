@@ -63,7 +63,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      * This contract could receive tokens, using functionalities designed in erc223 standard.
      * !! works only with tokens designed in erc223 way.
      */
-    function onTokenReceived(address _from, uint _value, bytes _data) external {
+    function tokenFallback(address _from, uint _value, bytes _data) external {
         // msg.sender is a token-contract address here
         // we will use this information to filter what token we accept as deposit
 

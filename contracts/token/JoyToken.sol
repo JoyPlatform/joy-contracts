@@ -42,7 +42,7 @@ contract JoyToken is StandardToken {
         balances[_to] = balances[_to].add(_value);
         if (isContract(_to)) {
             ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
-            receiver.onTokenReceived(msg.sender, _value, _data);
+            receiver.tokenFallback(msg.sender, _value, _data);
         }
         Transfer(msg.sender, _to, _value, _data);
         return true;
@@ -64,7 +64,7 @@ contract JoyToken is StandardToken {
             bytes memory _empty_data;
 
             ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
-            receiver.onTokenReceived(msg.sender, _value, _empty_data);
+            receiver.tokenFallback(msg.sender, _value, _empty_data);
         }
         Transfer(msg.sender, _to, _value);
         return true;

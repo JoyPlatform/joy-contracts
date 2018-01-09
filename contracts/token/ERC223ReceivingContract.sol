@@ -12,5 +12,5 @@ contract ERC223ReceivingContract {
  * @param _value Amount of tokens.
  * @param _data  Transaction metadata.
  */
-    function onTokenReceived(address _from, uint _value, bytes _data) external;
+    function tokenFallback(address _from, uint _value, bytes _data) external;
 }
