@@ -11,10 +11,10 @@ def test_baseProperties(chain):
     assert JoyToken_symbol == "JOY"
 
     JoyToken_decimals = JoyToken.call().decimals()
-    assert JoyToken_decimals == 18
+    assert JoyToken_decimals == 10
 
     JoyToken_supply = JoyToken.call().totalSupply()
-    assert JoyToken_supply == 21000000 * (10 ** JoyToken_decimals)
+    assert JoyToken_supply == 700000000 * (10 ** JoyToken_decimals)
 
 
 def test_simpleTransfer(web3, chain):
