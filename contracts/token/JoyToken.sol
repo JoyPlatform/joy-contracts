@@ -27,56 +27,79 @@ contract JoyToken is StandardToken {
 
     // -------------------- features inspired by erc223 idea --------------------
 
-    // Event for transfers that contain additional data
-    event Transfer(address indexed from, address indexed to, uint value, bytes indexed data);
+    // Event for ERC223 transfers that contain additional data.
+    event ERC223Transfer(address indexed from, address indexed to, uint256 value, bytes data);
 
     /**
+     * ERC223 Reference implementation
      * Function that is called when a user or another contract wants to transfer funds.
      */
-    function transfer(address _to, uint _value, bytes _data) public returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[msg.sender]);
-
-        // SafeMath.sub will throw if there is not enough balance.
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        if (isContract(_to)) {
-            ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
-            receiver.tokenFallback(msg.sender, _value, _data);
+    function transfer(address _to, uint _value, bytes _data) returns (bool success) {
+        if(isContract(_to)) {
+            return transferToContract(_to, _value, _data);
         }
-        Transfer(msg.sender, _to, _value, _data);
-        return true;
+        else {
+            return transferToAddress(_to, _value, _data);
+        }
     }
 
     /**
      * Standard function transfer similar to ERC20 transfer with no _data .
      * Added due to backwards compatibility reasons.
      */
-    function transfer(address _to, uint _value) public returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[msg.sender]);
+    function transfer(address _to, uint _value) returns (bool success) {
+        bytes memory empty;
+        if(isContract(_to)) {
+            return transferToContract(_to, _value, empty);
+        }
+        else {
+            return transferToAddress(_to, _value, empty);
+        }
+    }
+
+    /**
+     * @dev Function that is called when transaction target is an address
+     * This is a standard ERC20 way of token transfering
+     * Backward compatible including standard Transfer event
+     */
+    function transferToAddress(address _to, uint _value, bytes _data) private returns (bool success) {
+        require(_value <= balanceOf(msg.sender));
 
         // SafeMath.sub will throw if there is not enough balance.
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-
-        if (isContract(_to)) {
-            bytes memory _empty_data;
-
-            ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
-            receiver.tokenFallback(msg.sender, _value, _empty_data);
-        }
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        balances[_to] = balanceOf(_to).add(_value);
         Transfer(msg.sender, _to, _value);
+        ERC223Transfer(msg.sender, _to, _value, _data);
+        return true;
+     }
+
+    /**
+     * @dev Function that is called when transaction target is a contract
+     * This is a ERC223 way of transfering tokens to contracts
+     * Receiving contract need to implement tokenFallback function, otherwise transfer will be reverted.
+     * Thanks to it, tokens will not be lost.
+     */
+    function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
+        require(_value <= balanceOf(msg.sender));
+
+        // SafeMath.sub will throw if there is not enough balance.
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        balances[_to] = balanceOf(_to).add(_value);
+
+        ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
+        receiver.tokenFallback(msg.sender, _value, _data);
+        Transfer(msg.sender, _to, _value);
+        ERC223Transfer(msg.sender, _to, _value, _data);
         return true;
     }
 
     /**
-     * @dev Checking if given address is a contract
+     * @dev Helper function. Checking if given address is a contract
      *
      * Check is made by assemby size of bytecode that can be executed on given eth address, only contracts have it
      * _addr any eth valid address
      */
-    function isContract(address _addr) internal constant returns (bool) {
+    function isContract(address _addr) private constant returns (bool) {
         uint codeLength;
         assembly {
             // Retrieve the size of the code on target address, this needs assembly .
