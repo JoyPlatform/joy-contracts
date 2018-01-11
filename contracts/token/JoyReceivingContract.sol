@@ -7,8 +7,6 @@ import './ERC223ReceivingContract.sol';
  * JoyReceivingContract adding new customDeposit that is analogous to tokenFallback function
  */
 contract JoyReceivingContract is ERC223ReceivingContract {
-
-    function customDeposit(address _from, uint _value, bytes _data) external {
-      revert();
-    }
+    //  customDeposit function analogous to tokenFallback function in ERC223ReceivingContract
+    function customDeposit(address _from, uint _value, bytes _data) external;
 }
