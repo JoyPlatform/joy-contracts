@@ -2,6 +2,7 @@ pragma solidity ^0.4.11;
 
 import './StandardToken.sol';
 import './ERC223ReceivingContract.sol';
+import './JoyReceivingContract.sol';
 
 /**
  * @title SimpleToken
@@ -29,6 +30,9 @@ contract JoyToken is StandardToken {
 
     // Event for ERC223 transfers that contain additional data.
     event ERC223Transfer(address indexed from, address indexed to, uint256 value, bytes data);
+
+    // Special Event for transferToDeposit function.
+    event CustomDeposit(address indexed from, address indexed to, uint256 value, bytes data);
 
     /**
      * ERC223 Reference implementation
@@ -59,7 +63,7 @@ contract JoyToken is StandardToken {
 
     /**
      * @dev Function that is called when transaction target is an address
-     * This is a standard ERC20 way of token transfering
+     * This is a ERC20 standard way of token transfering
      * Backward compatible including standard Transfer event
      */
     function transferToAddress(address _to, uint _value, bytes _data) private returns (bool success) {
@@ -90,6 +94,26 @@ contract JoyToken is StandardToken {
         receiver.tokenFallback(msg.sender, _value, _data);
         Transfer(msg.sender, _to, _value);
         ERC223Transfer(msg.sender, _to, _value, _data);
+        return true;
+    }
+
+    /**
+     * @dev Custom transfer function for JoyPlatform demands
+     * transferToDeposit is similar to erc223 transferToContract function, but requires different receiver function.
+     * This approach allows additional specific behavior for the needs of JoyPlatform
+     * transfer is possible only to another contract supporting customDeposit
+     **/
+    function transferToDeposit(address _to, uint _value, bytes _data) public returns (bool success) {
+        require(isContract(_to));
+        require(_value <= balanceOf(msg.sender));
+
+        // SafeMath.sub will throw if there is not enough balance.
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        balances[_to] = balanceOf(_to).add(_value);
+
+        JoyReceivingContract receiver = JoyReceivingContract(_to);
+        receiver.customDeposit(msg.sender, _value, _data);
+        CustomDeposit(msg.sender, _to, _value, _data);
         return true;
     }
 
