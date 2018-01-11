@@ -1,3 +1,4 @@
+from populus.utils.wait import wait_for_transaction_receipt
 from ethereum.tester import TransactionFailed
 
 # test basic properties of JoyToken
@@ -91,3 +92,21 @@ def test_failedTransfer(web3, chain):
         failed = True
 
     assert failed
+
+
+def test_transferWithData(web3, chain):
+    # deploy JoyToken from coinbase address
+    JoyToken, _ = chain.provider.get_or_deploy_contract('JoyToken')
+    # get initial token balance == 21000000
+    JoyToken_supply = JoyToken.call().totalSupply()
+
+    # transfer all tokens to acc 1, with additional data
+    txhash_token = JoyToken.transact({ 'from': web3.eth.coinbase }).transfer(web3.eth.accounts[1], JoyToken_supply, "simple_data");
+
+    receipt = wait_for_transaction_receipt(web3, txhash_token)
+    print(receipt)
+
+    eventFilter = JoyToken.pastEvents("ERC223Transfer", {'filter': {'from': web3.eth.coinbase} });
+    found_logs = eventFilter.get()
+
+    assert found_logs[0]['args']['data'] == 'simple_data'

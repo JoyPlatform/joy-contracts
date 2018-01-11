@@ -7,11 +7,9 @@ def test_sendToContract(web3, chain):
     JoyToken = chain.provider.get_contract_factory('JoyToken')
     PlatformDeposit = chain.provider.get_contract_factory('PlatformDeposit')
 
-
     txhash_token = JoyToken.deploy(transaction={"from": web3.eth.coinbase})
     token_receipt = wait_for_transaction_receipt(web3, txhash_token)
     token_address = token_receipt["contractAddress"]
-
 
     txhash_deposit = PlatformDeposit.deploy(transaction={"from": web3.eth.coinbase}, args=[token_address, web3.eth.accounts[1]])
     deposit_receipt = wait_for_transaction_receipt(web3, txhash_deposit)
@@ -62,3 +60,23 @@ def test_sendToContract(web3, chain):
         failed = True
 
     assert failed
+
+def test_transferToContractWithData(web3, chain):
+    # deploy JoyToken and contract that support receiving erc223 Tokens, from coinbase address
+    JoyToken = chain.provider.get_contract_factory('JoyToken')
+    PlatformDeposit = chain.provider.get_contract_factory('PlatformDeposit')
+
+    txhash_token = JoyToken.deploy(transaction={"from": web3.eth.coinbase})
+    token_receipt = wait_for_transaction_receipt(web3, txhash_token)
+    token_address = token_receipt["contractAddress"]
+
+    txhash_deposit = PlatformDeposit.deploy(transaction={"from": web3.eth.coinbase}, args=[token_address, web3.eth.accounts[1]])
+    deposit_receipt = wait_for_transaction_receipt(web3, txhash_deposit)
+    deposit_address = deposit_receipt["contractAddress"]
+
+    JoyToken.transact({ 'from': web3.eth.coinbase, 'to': token_address }).transfer(web3.eth.accounts[1], 60000, 'test_data');
+
+    eventFilter = JoyToken.pastEvents("ERC223Transfer", {'filter': {'from': web3.eth.coinbase} });
+    found_logs = eventFilter.get()
+
+    assert found_logs[0]['args']['data'] == 'test_data'
