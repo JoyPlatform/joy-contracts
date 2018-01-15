@@ -10,8 +10,8 @@ contract SubscriptionWithEther is Subscription, Ownable {
 
     // constructor
     function SubscriptionWithEther() public {
-        // set initially subscription price to 1 ether
-        subscriptionPrice = 1 ether;
+        // set initially subscription price in base wei units
+        subscriptionPrice = 0.02 szabo; // 20 Gwei
     }
 
     // setting new subscription price, owned function
@@ -19,13 +19,15 @@ contract SubscriptionWithEther is Subscription, Ownable {
         subscriptionPrice = newPrice;
     }
 
-    function subscribe() public payable {
-        require(msg.value == subscriptionPrice);
+    // ammountOfTime means amount of subscription time (in seconds)
+    function subscribe(uint amountOfTime) public payable {
+        require(msg.value == (subscriptionPrice * amountOfTime));
 
-        uint subTime = block.timestamp;
+        // creating memory object about subsciption time-info
+        subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
-        subscriptionFrom[msg.sender] = subTime;
-        newSubscription(msg.sender, subTime, subscriptionPrice);
+        allSubscriptions[msg.sender] = subInfo;
+        newSubscription(msg.sender, subscriptionPrice, subInfo);
     }
 
     // return collected funds in Wei that can be withdrawed by platform owner.
@@ -35,12 +37,11 @@ contract SubscriptionWithEther is Subscription, Ownable {
         return contractAddress.balance;
     }
 
-    // function that allows platform owner to withdraw funds
-    function payOut(uint256 amount) onlyOwner public {
+    // function that allows platform owner to withdraw funds to given address
+    function payOut(address to, uint256 amount) onlyOwner public {
         address contractAddress = this;
         require(amount <= contractAddress.balance);
 
-        msg.sender.transfer(amount);
+        to.transfer(amount);
     }
 }
-

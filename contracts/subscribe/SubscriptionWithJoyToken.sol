@@ -18,15 +18,14 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         // create JoyToken instance from deployed address
         m_JoyToken = JoyToken(JoyTokenAddress);
 
-        // set initially subscription price to 10000 base JoyToken units
-        subscriptionPrice = 10000;
+        // set initially subscription price to 100 base JoyToken units
+        subscriptionPrice = 100;
     }
 
     // setting new subscription price in base JoyToken units, owned function
     function setSubscriptionPrice(uint256 newPrice) onlyOwner public {
         subscriptionPrice = newPrice;
     }
-
 
     // child payable subscribe method, without arguments is not allowed in this contract
     function subscribe() payable {
@@ -38,14 +37,15 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
      * instead of using msg.sender and msg.value
      * @dev erc223 TokenTransfer invokes another function: 'onTokenReceived'
      */
-    function subscribe(address subscriber, uint256 value) internal {
+    function subscribe(address subscriber, uint256 value, uint amountOfTime) internal {
         // check if the value sent is correct
-        require(value == subscriptionPrice);
+        require(value == (subscriptionPrice * amountOfTime));
 
-        uint subTime = block.timestamp;
-        subscriptionFrom[subscriber] = subTime;
+        // creating memory object about subsciption time-info
+        subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
-        newSubscription(subscriber, subTime, subscriptionPrice);
+        allSubscriptions[subscriber] = subInfo;
+        newSubscription(subscriber, subscriptionPrice, subInfo);
     }
 
     /**
@@ -53,12 +53,12 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
      * This contract could receive tokens, using functionalities designed in erc223 standard.
      * !! works only with tokens designed in erc223 way.
      */
-    function onTokenReceived(address _from, uint _value, bytes _data) external {
+    function onTokenReceived(address from, uint value, bytes data) external {
         // msg.sender is a token-contract address here, get address of JoyToken and check
         require(msg.sender == address(m_JoyToken));
 
         // execute subscribe method
-        subscribe(_from, _value);
+        subscribe(from, value, bytesHexToUint256(data));
     }
 
 
@@ -69,13 +69,50 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         return m_JoyToken.balanceOf(contractAddress);
     }
 
-    // function that allows platform owner to withdraw funds
-    function payOut(uint256 amount) onlyOwner public {
+    // function that allows platform owner to withdraw funds to given address
+    function payOut(address to, uint256 amount) onlyOwner public {
         address contractAddress = this;
         require(amount <= contractAddress.balance);
 
         // Use JoyToken method to transfer real Tokens to platform owner.
-        m_JoyToken.transfer(msg.sender, amount);
+        m_JoyToken.transfer(to, amount);
+    }
+
+    /**
+     * pure, internal helper function that converts bytes in hex encoding to uint256 number
+     * example of outputs:
+     * bytes: "ff" -> uint256: 255
+     * bytes: "AD" -> uint256: 173  // works with both lowercase and uppercase
+     * bytes: "2Ffd" -> uint256: 12285
+     * notice:
+     **/
+    function bytesHexToUint256(bytes b) pure public returns (uint256) {
+        // there is no sense to convert bigger numbers
+        require(b.length <= 64);
+
+        uint256 result = 0;
+        for (uint i = 0; i < b.length; i++) {
+            bool syntax = false;
+            uint256 c = uint256(b[i]);
+
+            // [0-9]
+            if (c >= 48 && c <= 57) {
+                syntax = true;
+                result = result * 16 + (c - 48);
+            }
+            // [A-F]
+            if(c >= 65 && c<= 70) {
+                syntax = true;
+                result = result * 16 + (c - 55);
+            }
+            // [a-f]
+            if(c >= 97 && c<= 102) {
+                syntax = true;
+                result = result * 16 + (c - 87);
+            }
+            // reverting bad input syntax
+            require(syntax);
+        }
+        return result;
     }
 }
-
