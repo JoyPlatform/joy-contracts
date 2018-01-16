@@ -48,55 +48,49 @@ def if_account_available(web3, acc_address, acc_purpose):
             i += 1
         exit(1)
 
-
-def deploy_JoyToken(chain, web3, contractOwner):
-    print("Deploying JoyToken...")
-    JoyToken = chain.provider.get_contract_factory('JoyToken')
-    txhash = JoyToken.deploy(transaction={"from":contractOwner})
-    print("JoyToken txhash is: ", txhash)
-    receipt = wait_for_transaction_receipt(web3, txhash)
-    print("JoyToken receipt: ", receipt)
+def deploy_contract(contractName, chain, contractOwner, *deploy_args):
+    print("Deploying " + contractName + "...")
+    contract = chain.provider.get_contract_factory(contractName)
+    txhash = contract.deploy(transaction={"from":contractOwner}, args=deploy_args)
+    print(contractName + " txhash is: ", txhash)
+    receipt = wait_for_transaction_receipt(chain.web3, txhash)
+    print(contractName + " receipt: ", receipt)
     return receipt["contractAddress"]
 
 
-def deploy_Deposit(chain, web3, JoyTokenAddress, platformReserve, contractOwner):
-    print("Deploying PlatformDeposit...")
-    PlatformDeposit = chain.provider.get_contract_factory('PlatformDeposit')
-    txhash = PlatformDeposit.deploy(transaction={"from": contractOwner}, args=[JoyTokenAddress, platformReserve])
-    print("PlatformDeposit txhash is: ", txhash)
-    receipt = wait_for_transaction_receipt(web3, txhash)
-    print("PlatformDeposit receipt: ", receipt)
-    return receipt["contractAddress"]
+# deploy JoyToken and update json_data
+def deploy_JoyToken(chain, contractOwner, json_data):
+    newJoyTokenAddress = deploy_contract("JoyToken", chain, contractOwner)
+    json_data["ContractAddress"]["JoyToken"] = newJoyTokenAddress
 
 
-def deploy_DemoGame(chain, web3, DepositAddress, gameDeveloper, contractOwner):
-    print("Deploying JoyDemoGame...")
-    JoyGameDemo = chain.provider.get_contract_factory('JoyGameDemo')
-    txhash = JoyGameDemo.deploy(transaction={"from": contractOwner}, args=[DepositAddress, gameDeveloper])
-    print("JoyDemoGame txhash is: ", txhash)
-    receipt = wait_for_transaction_receipt(web3, txhash)
-    print("JoyDemoGame receipt: ", receipt)
-    return receipt["contractAddress"]
+# deploy Deposit and update json_data
+def deploy_Deposit(chain, contractOwner, json_data):
+    JoyTokenAddress = json_data["ContractAddress"]["JoyToken"]
+    platformReserve = json_data["AccountAddress"]["platformReserve"]
+    newDepositAddress = deploy_contract("PlatformDeposit", chain, contractOwner, JoyTokenAddress, platformReserve)
+    json_data["ContractAddress"]["Deposit"] = newDepositAddress
 
 
-def deploy_EtherSub(chain, web3, contractOwner):
-    print("Deploying SubscriptionWithEther...")
-    EtherSub = chain.provider.get_contract_factory('SubscriptionWithEther')
-    txhash = EtherSub.deploy(transaction={"from": contractOwner})
-    print("SubscriptionWithEther txhash is: ", txhash)
-    receipt = wait_for_transaction_receipt(web3, txhash)
-    print("SubscriptionWithEther receipt: ", receipt)
-    return receipt["contractAddress"]
+# deploy DemoGame and update json_data
+def deploy_DemoGame(chain, contractOwner, json_data):
+    DepositAddress = json_data["ContractAddress"]["Deposit"];
+    gameDeveloper = json_data["AccountAddress"]["gameDeveloper"]
+    newDemoGameAddress = deploy_contract("JoyGameDemo", chain, contractOwner, DepositAddress, gameDeveloper)
+    json_data["ContractAddress"]["DemoGame"] = newDemoGameAddress
 
 
-def deploy_JoySub(chain, web3, JoyTokenAddress, contractOwner):
-    print("Deploying SubscriptionWithJoyToken...")
-    JoySub = chain.provider.get_contract_factory('SubscriptionWithJoyToken')
-    txhash = JoySub.deploy(transaction={"from": contractOwner}, args=[JoyTokenAddress])
-    print("SubscriptionWithJoyToken txhash is: ", txhash)
-    receipt = wait_for_transaction_receipt(web3, txhash)
-    print("SubscriptionWithJoyToken receipt: ", receipt)
-    return receipt["contractAddress"]
+# deploy SubscriptionWithEther and update json_data
+def deploy_EtherSub(chain, contractOwner, json_data):
+    newEtherSubAddress = deploy_contract("SubscriptionWithEther", chain, contractOwner)
+    json_data["ContractAddress"]["SubscriptionWithEther"] = newEtherSubAddress
+
+
+# deploy SubscriptionWithJoyToken and update json_data
+def deploy_JoySub(chain, contractOwner, json_data):
+    JoyTokenAddress = json_data["ContractAddress"]["JoyToken"]
+    newJoySubAddress = deploy_contract("SubscriptionWithJoyToken", chain, contractOwner, JoyTokenAddress)
+    json_data["ContractAddress"]["SubscriptionWithJoyToken"] = newJoySubAddress
 
 
 def deployDemoContracts():
@@ -140,37 +134,25 @@ def deployDemoContracts():
                 + "\n\tSubscriptionWithEther: " + str(givenEtherSub)
                 + "\n\tSubscriptionWithJoyToken: " + str(givenJoySub))
 
-            deployed = {'JoyToken'}
+
             if not givenJoyToken:
-                JoyTokenAddress = deploy_JoyToken(chain, web3, contractsOwner);
-                DepositAddress = deploy_Deposit(chain, web3, JoyTokenAddress, platformReserve, contractsOwner);
-                DemoGameAddress = deploy_DemoGame(chain, web3, DepositAddress, gameDeveloper, contractsOwner);
-                # update json_data
-                json_data["ContractAddress"]["JoyToken"] = JoyTokenAddress
-                json_data["ContractAddress"]["Deposit"] = DepositAddress
-                json_data["ContractAddress"]["DemoGame"] = DemoGameAddress
+                deploy_JoyToken(chain, contractsOwner, json_data);
+                deploy_Deposit(chain, contractsOwner, json_data);
+                deploy_DemoGame(chain, contractsOwner, json_data);
             elif not givenDeposit:
-                JoyTokenAddress = json_data["ContractAddress"]["JoyToken"]
-                DepositAddress = deploy_Deposit(chain, web3, JoyTokenAddress, platformReserve, contractsOwner);
-                DemoGameAddress = deploy_DemoGame(chain, web3, DepositAddress, gameDeveloper, contractsOwner);
-                # update json_data
-                json_data["ContractAddress"]["Deposit"] = DepositAddress
-                json_data["ContractAddress"]["DemoGame"] = DemoGameAddress
+                deploy_Deposit(chain, contractsOwner, json_data);
+                deploy_DemoGame(chain, contractsOwner, json_data);
             elif not givenDemoGame:
-                DepositAddress = json_data["ContractAddress"]["Deposit"]
-                DemoGameAddress = deploy_DemoGame(chain, web3, DepositAddress, gameDeveloper, contractsOwner);
-                # update json_data
-                json_data["ContractAddress"]["DemoGame"] = DemoGameAddress
+                deploy_DemoGame(chain, contractsOwner, json_data);
 
             if not givenEtherSub:
-                json_data["ContractAddress"]["SubscriptionWithEther"] = deploy_EtherSub(chain, web3, contractsOwner);
+                deploy_EtherSub(chain, contractsOwner, json_data);
 
             if not givenJoySub:
-                JoyTokenAddress = json_data["ContractAddress"]["JoyToken"]
-                json_data["ContractAddress"]["SubscriptionWithJoyToken"] = deploy_JoySub(chain, web3, JoyTokenAddress, contractsOwner);
+                deploy_JoySub(chain, contractsOwner, json_data);
 
             # saving genrated address to a convenient config.json file (update given deploy.json)
-            print('Writing updated changes and generated contract addresses in 'depoly/config.json' file...')
+            print("Writing updated changes and generated contract addresses in 'deploy/config.json' file...")
             with open('deploy/config.json', 'w') as fp:
                 json.dump(json_data, fp, indent=4)
 
