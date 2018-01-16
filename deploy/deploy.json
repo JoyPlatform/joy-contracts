@@ -1,0 +1,14 @@
+{
+    "AccountAddress": {
+        "contractsOwner": "",
+        "platformReserve": "",
+        "gameDeveloper": ""
+    },
+    "ContractAddress": {
+        "JoyToken": "",
+        "Deposit": "",
+        "DemoGame": "",
+        "SubscriptionWithEther": "",
+        "SubscriptionWithJoyToken": ""
+    }
+}
