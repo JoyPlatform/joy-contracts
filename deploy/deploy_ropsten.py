@@ -38,7 +38,13 @@ def check_contract_field(web3, json_data, field):
 
 def if_account_available(web3, acc_address, acc_purpose):
     availble_accounts = web3.personal.listAccounts
-    if acc_address not in availble_accounts:
+    found = False
+    for acc in availble_accounts:
+        # addresses need to be converted to same the format. (checksum addresses prevents lower/upper case problems)
+        if web3.toChecksumAddress(acc) == web3.toChecksumAddress(acc_address):
+            found = True
+
+    if not found:
         print("Given address [" + acc_address +
             "] for " + acc_purpose + " is not available from your web3 provider! Aborting..")
         print("Your accounts:")
