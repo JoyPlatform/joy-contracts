@@ -24,15 +24,13 @@ contract Subscription {
     // setting new subscription price
     function setSubscriptionPrice(uint256 newPrice) public;
 
-    // main method for purchasing subscription, payable
-    function subscribe() public payable;
-
     // return information about collected funds
     function collectedFunds() public view returns (uint256);
 
     /**
      * function that allows to withdraw funds
+     * @param to - address where funds will be transferred
      * @param amount of funds in base unit
      */
-    function payOut(uint256 amount) public;
+    function payOut(address to, uint256 amount) public;
 }

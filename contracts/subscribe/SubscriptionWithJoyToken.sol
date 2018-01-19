@@ -27,11 +27,6 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         subscriptionPrice = newPrice;
     }
 
-    // child payable subscribe method, without arguments is not allowed in this contract
-    function subscribe() payable {
-        revert();
-    }
-
     /**
      * subscription is internal function that takes subscriber address and sent value as argument
      * instead of using msg.sender and msg.value
