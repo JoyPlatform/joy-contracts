@@ -27,7 +27,7 @@ contract SubscriptionWithEther is Subscription, Ownable {
         subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
         allSubscriptions[msg.sender] = subInfo;
-        newSubscription(msg.sender, subscriptionPrice, subInfo);
+        newSubscription(msg.sender, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
     }
 
     // return collected funds in Wei that can be withdrawed by platform owner.

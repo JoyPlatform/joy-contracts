@@ -18,8 +18,8 @@ contract Subscription {
     // basic acctual price of one second of subscription time
     uint256 public subscriptionPrice;
 
-    // event
-    event newSubscription(address indexed buyer, uint256 price, subscribeInfo);
+    // event - two last arguments are from subscribeInfo
+    event newSubscription(address indexed buyer, uint256 price, uint timepoint, uint amountOfTime);
 
     // setting new subscription price
     function setSubscriptionPrice(uint256 newPrice) public;

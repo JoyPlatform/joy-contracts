@@ -40,7 +40,7 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
         allSubscriptions[subscriber] = subInfo;
-        newSubscription(subscriber, subscriptionPrice, subInfo);
+        newSubscription(msg.sender, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
     }
 
     /**
