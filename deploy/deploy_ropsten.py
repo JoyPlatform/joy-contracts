@@ -38,7 +38,7 @@ def check_contract_field(web3, json_data, field):
 
 def check_subscription_contract_field(web3, json_data, field):
     print("Checking subscription contract address 'ContractAddress.subscription." + field + "' field in 'deploy.json' file.")
-    if field in json_data["ContractAddress"]:
+    if field in json_data["ContractAddress"]["subscription"]:
         if not json_data["ContractAddress"]["subscription"][field]:
             return False
         if not web3.isAddress(json_data["ContractAddress"]["subscription"][field]):
