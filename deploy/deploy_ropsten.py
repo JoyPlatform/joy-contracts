@@ -36,6 +36,20 @@ def check_contract_field(web3, json_data, field):
         return False
 
 
+def check_subscription_contract_field(web3, json_data, field):
+    print("Checking subscription contract address 'ContractAddress.subscription." + field + "' field in 'deploy.json' file.")
+    if field in json_data["ContractAddress"]:
+        if not json_data["ContractAddress"]["subscription"][field]:
+            return False
+        if not web3.isAddress(json_data["ContractAddress"]["subscription"][field]):
+            raise ValueError(json_data["ContractAddress"]["subscription"][field]
+                + " is not a correct eth address. Required for 'ContractAddress.subscription." + field + "'.")
+        else:
+            return True
+    else:
+        return False
+
+
 def if_account_available(web3, acc_address, acc_purpose):
     availble_accounts = web3.personal.listAccounts
     found = False
@@ -67,36 +81,36 @@ def deploy_contract(contractName, chain, contractOwner, *deploy_args):
 # deploy JoyToken and update json_data
 def deploy_JoyToken(chain, contractOwner, json_data):
     newJoyTokenAddress = deploy_contract("JoyToken", chain, contractOwner)
-    json_data["ContractAddress"]["JoyToken"] = newJoyTokenAddress
+    json_data["ContractAddress"]["joyToken"] = newJoyTokenAddress
 
 
 # deploy Deposit and update json_data
 def deploy_Deposit(chain, contractOwner, json_data):
-    JoyTokenAddress = json_data["ContractAddress"]["JoyToken"]
+    JoyTokenAddress = json_data["ContractAddress"]["joyToken"]
     platformReserve = json_data["AccountAddress"]["platformReserve"]
     newDepositAddress = deploy_contract("PlatformDeposit", chain, contractOwner, JoyTokenAddress, platformReserve)
-    json_data["ContractAddress"]["Deposit"] = newDepositAddress
+    json_data["ContractAddress"]["deposit"] = newDepositAddress
 
 
 # deploy DemoGame and update json_data
 def deploy_DemoGame(chain, contractOwner, json_data):
-    DepositAddress = json_data["ContractAddress"]["Deposit"];
+    DepositAddress = json_data["ContractAddress"]["deposit"];
     gameDeveloper = json_data["AccountAddress"]["gameDeveloper"]
     newDemoGameAddress = deploy_contract("JoyGameDemo", chain, contractOwner, DepositAddress, gameDeveloper)
-    json_data["ContractAddress"]["DemoGame"] = newDemoGameAddress
+    json_data["ContractAddress"]["demoGame"] = newDemoGameAddress
 
 
 # deploy SubscriptionWithEther and update json_data
 def deploy_EtherSub(chain, contractOwner, json_data):
     newEtherSubAddress = deploy_contract("SubscriptionWithEther", chain, contractOwner)
-    json_data["ContractAddress"]["SubscriptionWithEther"] = newEtherSubAddress
+    json_data["ContractAddress"]["subscription"]["ether"] = newEtherSubAddress
 
 
 # deploy SubscriptionWithJoyToken and update json_data
 def deploy_JoySub(chain, contractOwner, json_data):
-    JoyTokenAddress = json_data["ContractAddress"]["JoyToken"]
+    JoyTokenAddress = json_data["ContractAddress"]["joyToken"]
     newJoySubAddress = deploy_contract("SubscriptionWithJoyToken", chain, contractOwner, JoyTokenAddress)
-    json_data["ContractAddress"]["SubscriptionWithJoyToken"] = newJoySubAddress
+    json_data["ContractAddress"]["subscription"]["joyToken"] = newJoySubAddress
 
 
 def deployDemoContracts():
@@ -127,18 +141,19 @@ def deployDemoContracts():
 
 
             # Determine which contracts will be deployed
-            givenJoyToken = check_contract_field(web3, json_data, "JoyToken")
-            givenDeposit = check_contract_field(web3, json_data, "Deposit")
-            givenDemoGame = check_contract_field(web3, json_data, "DemoGame")
-            givenEtherSub = check_contract_field(web3, json_data, "SubscriptionWithEther")
-            givenJoySub = check_contract_field(web3, json_data, "SubscriptionWithJoyToken")
+            givenJoyToken = check_contract_field(web3, json_data, "joyToken")
+            givenDeposit = check_contract_field(web3, json_data, "deposit")
+            givenDemoGame = check_contract_field(web3, json_data, "demoGame")
+
+            givenEtherSub = check_subscription_contract_field(web3, json_data, "ether")
+            givenJoySub = check_subscription_contract_field(web3, json_data, "joyToken")
 
             print("Contracts status in deploy.json file:"
                 + "\n\tJoyToken: " + str(givenJoyToken)
                 + "\n\tDeposit: " + str(givenDeposit)
                 + "\n\tDemoGame: " + str(givenDemoGame)
-                + "\n\tSubscriptionWithEther: " + str(givenEtherSub)
-                + "\n\tSubscriptionWithJoyToken: " + str(givenJoySub))
+                + "\n\tSubscription with Ether: " + str(givenEtherSub)
+                + "\n\tSubscription with JoyToken: " + str(givenJoySub))
 
 
             if not givenJoyToken:

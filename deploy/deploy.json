@@ -5,10 +5,12 @@
         "gameDeveloper": ""
     },
     "ContractAddress": {
-        "JoyToken": "",
-        "Deposit": "",
-        "DemoGame": "",
-        "SubscriptionWithEther": "",
-        "SubscriptionWithJoyToken": ""
+        "joyToken": "",
+        "deposit": "",
+        "demoGame": "",
+        "subscription" : {
+            "ether" : "",
+            "joyToken" : ""
+        }
     }
 }
