@@ -1,17 +1,7 @@
-# builds and cache
-build
+# General gitignore
+
+# build and cache
 core
+build/
 .cache/
-tests/__pycache__/
-
-# populus configuration file
-project.json
-populus.json
-gethipc.config
-
-# populus deployment registy
-registrar.json
-
-# populus logs
-logs
 
