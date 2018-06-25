@@ -1,0 +1,25 @@
+{
+  "parser": "babel-eslint",
+  "extends" : [
+    "airbnb-base",
+  ],
+  "env": {
+    "node"    : true,
+    "mocha"   : true
+  },
+  "globals" : {
+    "artifacts": false,
+    "contract": false,
+    "assert": false
+  },
+  "rules": {
+    "no-tabs": "off",
+    "indent": ["error", "tab"],
+    "max-len": ["error", 120],
+    "comma-dangle": [1,"never"],
+    "arrow-body-style": ["error", "as-needed"],
+    'arrow-parens': ['error', 'as-needed', {
+      requireForBlockBody: true,
+    }]
+  }
+}
