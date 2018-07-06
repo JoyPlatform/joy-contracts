@@ -40,7 +40,7 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
         allSubscriptions[subscriber] = subInfo;
-        newSubscription(msg.sender, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
+        newSubscription(subscriber, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
     }
 
     /**
@@ -48,7 +48,7 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
      * This contract could receive tokens, using functionalities designed in erc223 standard.
      * !! works only with tokens designed in erc223 way.
      */
-    function onTokenReceived(address from, uint value, bytes data) external {
+    function tokenFallback(address from, uint value, bytes data) external {
         // msg.sender is a token-contract address here, get address of JoyToken and check
         require(msg.sender == address(m_JoyToken));
 
@@ -67,7 +67,8 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
     // function that allows platform owner to withdraw funds to given address
     function payOut(address to, uint256 amount) onlyOwner public {
         address contractAddress = this;
-        require(amount <= contractAddress.balance);
+
+        require(amount <= m_JoyToken.balanceOf(contractAddress));
 
         // Use JoyToken method to transfer real Tokens to platform owner.
         m_JoyToken.transfer(to, amount);
