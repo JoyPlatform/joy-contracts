@@ -1,7 +1,6 @@
 pragma solidity ^0.4.11;
 
-import '../ownership/Ownable.sol';
-
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract JoyGameAbstract is Ownable {
 

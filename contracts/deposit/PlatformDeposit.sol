@@ -1,9 +1,10 @@
 pragma solidity ^0.4.11;
 
-import '../math/SafeMath.sol';
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+
 import '../token/JoyToken.sol';
 import '../token/ERC223ReceivingContract.sol';
-import '../ownership/Ownable.sol';
 import '../game/JoyGameAbstract.sol';
 
 /**

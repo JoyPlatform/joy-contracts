@@ -1,7 +1,8 @@
 pragma solidity ^0.4.16;
 
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
+
 import './Subscription.sol';
-import '../ownership/Ownable.sol';
 
 /**
  * Contract for purchasing subscriptions with ether on the owned platform

@@ -1,8 +1,9 @@
 pragma solidity ^0.4.11;
 
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+
 import '../deposit/PlatformDeposit.sol';
-import '../math/SafeMath.sol';
-import '../ownership/Ownable.sol';
 import './JoyGameAbstract.sol';
 
 

@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 
-import './StandardToken.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
+
 import './ERC223ReceivingContract.sol';
 import './JoyReceivingContract.sol';
 
@@ -22,7 +23,7 @@ contract JoyToken is StandardToken {
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
     function JoyToken() public {
-        totalSupply = INITIAL_SUPPLY;           // update total supply
+        totalSupply_ = INITIAL_SUPPLY;           // update total supply
         balances[msg.sender] = INITIAL_SUPPLY;  // give the creator all initial tokens
     }
 
