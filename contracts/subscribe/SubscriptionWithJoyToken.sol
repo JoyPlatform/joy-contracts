@@ -1,4 +1,4 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.23;
 
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
@@ -14,8 +14,7 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
     // instance of deployed JoyToken contract. Registered in constructor
     JoyToken public m_JoyToken;
 
-    // constructor
-    function SubscriptionWithJoyToken(address JoyTokenAddress) public {
+    constructor(address JoyTokenAddress) public {
         // create JoyToken instance from deployed address
         m_JoyToken = JoyToken(JoyTokenAddress);
 
@@ -41,7 +40,7 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
         allSubscriptions[subscriber] = subInfo;
-        newSubscription(subscriber, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
+        emit newSubscription(subscriber, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
     }
 
     /**

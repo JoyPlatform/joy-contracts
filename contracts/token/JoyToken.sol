@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.23;
 
 import 'openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
 
@@ -22,7 +22,7 @@ contract JoyToken is StandardToken {
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
-    function JoyToken() public {
+    constructor() public {
         totalSupply_ = INITIAL_SUPPLY;           // update total supply
         balances[msg.sender] = INITIAL_SUPPLY;  // give the creator all initial tokens
     }
@@ -39,7 +39,7 @@ contract JoyToken is StandardToken {
      * ERC223 Reference implementation
      * Function that is called when a user or another contract wants to transfer funds.
      */
-    function transfer(address _to, uint _value, bytes _data) returns (bool success) {
+    function transfer(address _to, uint _value, bytes _data) public returns (bool success) {
         if(isContract(_to)) {
             return transferToContract(_to, _value, _data);
         }
@@ -52,7 +52,7 @@ contract JoyToken is StandardToken {
      * Standard function transfer similar to ERC20 transfer with no _data .
      * Added due to backwards compatibility reasons.
      */
-    function transfer(address _to, uint _value) returns (bool success) {
+    function transfer(address _to, uint _value) public returns (bool success) {
         bytes memory empty;
         if(isContract(_to)) {
             return transferToContract(_to, _value, empty);
@@ -73,8 +73,8 @@ contract JoyToken is StandardToken {
         // SafeMath.sub will throw if there is not enough balance.
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
-        Transfer(msg.sender, _to, _value);
-        ERC223Transfer(msg.sender, _to, _value, _data);
+        emit Transfer(msg.sender, _to, _value);
+        emit ERC223Transfer(msg.sender, _to, _value, _data);
         return true;
      }
 
@@ -93,8 +93,8 @@ contract JoyToken is StandardToken {
 
         ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
         receiver.tokenFallback(msg.sender, _value, _data);
-        Transfer(msg.sender, _to, _value);
-        ERC223Transfer(msg.sender, _to, _value, _data);
+        emit Transfer(msg.sender, _to, _value);
+        emit ERC223Transfer(msg.sender, _to, _value, _data);
         return true;
     }
 
@@ -114,7 +114,7 @@ contract JoyToken is StandardToken {
 
         JoyReceivingContract receiver = JoyReceivingContract(_to);
         receiver.customDeposit(msg.sender, _value, _data);
-        CustomDeposit(msg.sender, _to, _value, _data);
+        emit CustomDeposit(msg.sender, _to, _value, _data);
         return true;
     }
 

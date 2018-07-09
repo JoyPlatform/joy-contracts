@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.23;
 
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
@@ -41,7 +41,7 @@ contract JoyGameDemo is JoyGameAbstract {
      * @param _depositContract address of already deployed depositContract
      * @param _gameDev address of game creator
      */
-    function JoyGameDemo(address _depositContract, address _gameDev) {
+    constructor(address _depositContract, address _gameDev) public {
 
         m_playerDeposits = PlatformDeposit(_depositContract);
 
@@ -75,12 +75,12 @@ contract JoyGameDemo is JoyGameAbstract {
 
         // brodcast logs in blockchain about new session
         // listening game server should start game after confirmation transaction containing execution of this function
-        NewGameSession(_player, _value);
+        emit NewGameSession(_player, _value);
     }
 
     //----------------------------------------- end session -------------------------------------------
 
-    function responseFromWS(address _playerAddr, uint256 _finalBalance, bytes32 hashOfGameProcess) onlyOwner {
+    function responseFromWS(address _playerAddr, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
         endGame( GameOutcome(_playerAddr, _finalBalance, hashOfGameProcess) );
     }
 
@@ -105,7 +105,7 @@ contract JoyGameDemo is JoyGameAbstract {
         openSessions[_gameOutcome.player] = false;
 
         // populate finite game info in transaction logs
-        EndGameInfo(_gameOutcome.player,
+        emit EndGameInfo(_gameOutcome.player,
                     gameLockedFunds,
                     _gameOutcome.finalBalance,
                     _gameOutcome.hashOfGameProcess);

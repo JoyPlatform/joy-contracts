@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.23;
 
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
@@ -33,7 +33,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      * @dev Constructor
      * @param _supportedToken The address of token contract that will be supported as players deposit
      */
-    function PlatformDeposit(address _supportedToken, address _platformReserve) {
+    constructor(address _supportedToken, address _platformReserve) public {
         // owner need to be separated from _platformReserve
         require(owner != _platformReserve);
 
@@ -86,7 +86,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      * @param _player address of registered player
      * @param _gameContractAddress address to the game contract
      */
-    function transferToGame(address _player, address _gameContractAddress) onlyOwner {
+    function transferToGame(address _player, address _gameContractAddress) public onlyOwner {
         // platformReserve is not allowed to play, this check prevents owner take possession of platformReserve
         require(_player != platformReserve);
 
@@ -209,7 +209,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     /**
      * @dev Function that could be executed by players to withdraw their deposit
      */
-    function payOut(address _to, uint256 _value) {
+    function payOut(address _to, uint256 _value) public {
         // use transfer function from supported token.
         // should be used from player address that was registered in deposits
         require(_value <= deposits[msg.sender]);
