@@ -4,6 +4,7 @@ import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 
 import '../token/JoyToken.sol';
+import '../token/JoyToken_Upgraded.sol';
 import '../token/ERC223ReceivingContract.sol';
 import '../game/JoyGameAbstract.sol';
 
@@ -64,13 +65,12 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
      * This contract could receive tokens, using functionalities designed in erc223 standard.
      * !! works only with tokens designed in erc223 way.
      */
-    function tokenFallback(address _from, uint _value, bytes _data) external {
+    function tokenFallback(address _from, uint256 _value, bytes) external {
         // msg.sender is a token-contract address here
         // we will use this information to filter what token we accept as deposit
 
-        // get address of supported token
-        require(msg.sender == address(m_supportedToken));
-        //TODO make sure about other needed requirements!
+        // require tokens sent with erc221 upgraded contract to be exac same as supported erc20 tokens
+        require(JoyTokenUpgraded(msg.sender).getUnderlyingTokenAddress() == address(m_supportedToken));
 
         deposits[_from] = deposits[_from].add(_value);
     }
@@ -212,7 +212,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
     function payOut(address _to, uint256 _value) public {
         // use transfer function from supported token.
         // should be used from player address that was registered in deposits
-        require(_value <= deposits[msg.sender]);
+        require(_value <= deposits[msg.sender], "Player balance is to low.");
 
         /**
          * Prevents payOut to the contract address.
@@ -220,7 +220,7 @@ contract PlatformDeposit is ERC223ReceivingContract, Ownable {
          * Even if owner use 'transferToGame' method to transfer some deposits to the fake contract,
          * he will not be able to withdraw Tokens to any private address.
          */
-        require(isContract(_to) == false);
+        require(isContract(_to) == false, "Address given should not be address of the contract.");
 
         deposits[msg.sender] = deposits[msg.sender].sub(_value);
 

@@ -5,12 +5,12 @@ import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import './Subscription.sol';
 import '../token/ERC223ReceivingContract.sol';
 import '../token/JoyToken.sol';
+import '../token/JoyToken_Upgraded.sol';
 
 /**
  * Contract for purchasing subscriptions with ERC223 JoyToken on the owned platform
  */
 contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContract {
-
     // instance of deployed JoyToken contract. Registered in constructor
     JoyToken public m_JoyToken;
 
@@ -48,9 +48,9 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
      * This contract could receive tokens, using functionalities designed in erc223 standard.
      * !! works only with tokens designed in erc223 way.
      */
-    function tokenFallback(address from, uint value, bytes data) external {
+    function tokenFallback(address from, uint256 value, bytes data) external {
         // msg.sender is a token-contract address here, get address of JoyToken and check
-        require(msg.sender == address(m_JoyToken));
+        require(JoyTokenUpgraded(msg.sender).getUnderlyingTokenAddress() == address(m_JoyToken));
 
         // execute subscribe method
         subscribe(from, value, bytesHexToUint256(data));
