@@ -1,31 +1,41 @@
 const JoyToken = artifacts.require('JoyToken');
 const SubscriptionWithJoyToken = artifacts.require('SubscriptionWithJoyToken');
+const JoyTokenUpgraded = artifacts.require('JoyTokenUpgraded');
 const Web3 = require('web3');
 
 
-contract('Subscription_with_ether', (accounts) => {
+contract('Subscription_with_joyToken', (accounts) => {
 	const web3 = new Web3();
 	web3.setProvider(JoyToken.web3.currentProvider);
 
+	const gasLimit = 200000;
 	const defaultPrice = 100;	// base units of JoyToken
 	const price2 = 120;
+	const testTokenAmount = 1000000;
 
 	let joyTokenInstance;
+	let joyTokenERC223;
 
 	// truffle currently have no mechanism to interact with overloaded methods, and we need transfer with data
 	// instead of using truffle-contract, we need to create contract object directly through web3
 	let joyTokenTransfer;
+
 	let subscriptionInstance;
+
 	beforeEach(async () => {
 		joyTokenInstance = await JoyToken.deployed();
-		const joyTokenABI = joyTokenInstance.contract.abi;
-		const joyTokenAddress = joyTokenInstance.contract.address;
-		const gasLimit = 200000;
-		const JoyTokenWeb3 = new web3.eth.Contract(joyTokenABI, joyTokenAddress, { gas: gasLimit });
-		joyTokenTransfer = JoyTokenWeb3.methods['transfer(address,uint256,bytes)'];
+		joyTokenERC223 = await JoyTokenUpgraded.deployed();
+		const joyToken223ABI = joyTokenERC223.contract.abi;
+		const JoyToken223Web3 = new web3.eth.Contract(joyToken223ABI, joyTokenERC223.address, { gas: gasLimit });
+		joyTokenTransfer = JoyToken223Web3.methods['transfer(address,uint256,bytes)'];
 
 		// send some tokens to acc3
-		await joyTokenInstance.transfer(accounts[3], 1000000);
+		await joyTokenInstance.transfer(accounts[3], testTokenAmount);
+
+		// allowances because base token is erc20
+		await joyTokenInstance.approve(joyTokenERC223.address, testTokenAmount, { from: accounts[0] });
+		await joyTokenInstance.approve(joyTokenERC223.address, testTokenAmount, { from: accounts[3] });
+
 		subscriptionInstance = await SubscriptionWithJoyToken.deployed();
 	});
 
@@ -95,13 +105,13 @@ contract('Subscription_with_ether', (accounts) => {
 	it('Buy_subscription', () =>
 		new Promise(async (resolve) => {
 			const actualPrice = await subscriptionInstance.subscriptionPrice.call();
-
 			const timeToBuy = 600;
 			const totalPrice = actualPrice * timeToBuy;
 			const timepointBefore = (new Date()).getTime() / 1000;
 
 			// prepare bytes from number
 			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16));
+
 			// transfer to contract
 			joyTokenTransfer(
 				subscriptionInstance.address,

@@ -22,7 +22,7 @@ contract('JoyToken', (accounts) => {
 			.then(instance => instance.decimals())
 			.then((decimals) => {
 				joyTokenDecimals = decimals;
-				assert.equal(decimals, 10, 'Decimal of JoyToken should be equal 10');
+				assert.equal(decimals, 18, 'Decimal of JoyToken should be equal 10');
 			}));
 
 	it('Total Supply of JoyToken', () =>

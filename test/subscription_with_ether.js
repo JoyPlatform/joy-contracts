@@ -15,7 +15,7 @@ contract('Subscription_with_ether', (accounts) => {
 	});
 
 	it('Check_price', () =>
-		new Promise(async (resolve) => {
+		new Promise((resolve) => {
 			subscriptionInstance.subscriptionPrice.call()
 				.then((price) => {
 					assert.equal(price, defaultPrice);
@@ -25,7 +25,7 @@ contract('Subscription_with_ether', (accounts) => {
 
 	// should throw exception
 	it('Set_price_fail', () =>
-		new Promise(async (resolve) => {
+		new Promise((resolve) => {
 			subscriptionInstance.setSubscriptionPrice(price2, { from: accounts[1] })
 				.catch((err) => {
 					assert.include(
@@ -38,9 +38,13 @@ contract('Subscription_with_ether', (accounts) => {
 		}));
 
 	it('Set_price', () =>
-		new Promise(async (resolve) => {
-			const owner = await subscriptionInstance.owner.call();
-			subscriptionInstance.setSubscriptionPrice(price2, { from: owner })
+		new Promise((resolve) => {
+			let owner;
+			subscriptionInstance.owner.call()
+				.then((ownerAddress) => {
+					owner = ownerAddress;
+					return subscriptionInstance.setSubscriptionPrice(price2, { from: owner });
+				})
 				.then(async () => {
 					const newPrice = await subscriptionInstance.subscriptionPrice.call();
 					assert.equal(price2, newPrice);
