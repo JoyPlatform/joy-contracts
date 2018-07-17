@@ -75,8 +75,14 @@ $ npm run test  # in separated terminal/tab
       ✓ Transfers failed - to big amount
       ✓ Transfers failed - from empty
 
-  Contract: JoyToken_OverloadedTransfer
-    ✓ Transfer with addtional data
+  Contract: JoyTokenUpgraded
+    ✓ JoyTokenUpgraded Name
+    ✓ JoyTokenUpgraded Symbol
+    ✓ JoyTokenUpgraded Decimal
+    ✓ Total Supply of JoyTokenUpgraded
+    Contract: JoyToken_OverloadedTransfer
+      ✓ Initialy the owner of contract have full totalSupply
+      ✓ Transfer with addtional data
 
   Contract: PlatformDeposit
     ✓ Transfer_to_deposit
@@ -95,7 +101,7 @@ $ npm run test  # in separated terminal/tab
     ✓ Payout_funds
     ✓ Payout_funds_to_friend
 
-  Contract: Subscription_with_ether
+  Contract: Subscription_with_joyToken
     ✓ Check_price
     ✓ Set_price_fail
     ✓ Set_price
@@ -105,5 +111,6 @@ $ npm run test  # in separated terminal/tab
     ✓ Payout_funds
     ✓ Payout_funds_to_friend
 
-  30 passing
+
+  35 passing
 ```
