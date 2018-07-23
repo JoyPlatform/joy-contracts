@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 
-import '../deposit/PlatformDeposit.sol';
+import '../deposit/GameDeposit.sol';
 import './JoyGameAbstract.sol';
 
 
@@ -25,7 +25,7 @@ contract JoyGameDemo is JoyGameAbstract {
      * deposit contract also contain information about supported token,
      * that will be supported also in this contract.
      */
-    PlatformDeposit public m_playerDeposits;
+    GameDeposit public m_playerDeposits;
 
     /**
      * @dev get amount of locked funds from coresponding to this contracti, deposit contract
@@ -38,15 +38,15 @@ contract JoyGameDemo is JoyGameAbstract {
     /**
      * Main constructor, that register source of value that will be used in games (depositContract)
      * and developer of the game
-     * @param _depositContract address of already deployed depositContract
+     * @param _gameDepositContract address of already deployed GameDeposit Contract
      * @param _gameDev address of game creator
      */
-    constructor(address _depositContract, address _gameDev) public {
+    constructor(address _gameDepositContract, address _gameDev) public {
 
-        m_playerDeposits = PlatformDeposit(_depositContract);
+        m_playerDeposits = GameDeposit(_gameDepositContract);
 
         // Require this contract and depositContract to be owned by the same address.
-        // This check prevents connecting to external malicious contract
+        // This check prevents connection to external malicious contract
         require(m_playerDeposits.owner() == owner);
 
         gameDev = _gameDev;
@@ -61,19 +61,17 @@ contract JoyGameDemo is JoyGameAbstract {
      * @param _value that will be given to the player in game session
      */
     function startGame(address _player, uint256 _value) external {
-        // only registred depositContract is allowed to execute this function
+        // Check if calling contract is registred as m_playerDeposits,
+        // non registred contracts are not allowed to affect to this game contract
         require(msg.sender == address(m_playerDeposits));
 
         // don't allow player to have two open sessions
         require(openSessions[_player] == false);
 
-        // Check if calling contract is registred as m_playerDeposits,
-        // non registred contracts are not allowed to affect to this game contract
-        require(msg.sender == address(m_playerDeposits));
 
         openSessions[_player] = true;
 
-        // brodcast logs in blockchain about new session
+        // brodcast log about new session
         // listening game server should start game after confirmation transaction containing execution of this function
         emit NewGameSession(_player, _value);
     }
@@ -81,7 +79,7 @@ contract JoyGameDemo is JoyGameAbstract {
     //----------------------------------------- end session -------------------------------------------
 
     function responseFromWS(address _playerAddr, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
-        endGame( GameOutcome(_playerAddr, _finalBalance, hashOfGameProcess) );
+        endGame(GameOutcome(_playerAddr, _finalBalance, hashOfGameProcess) );
     }
 
     /**

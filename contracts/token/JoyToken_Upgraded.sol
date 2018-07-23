@@ -105,11 +105,11 @@ contract JoyTokenUpgraded {
 
     /**
      * @dev Custom transfer function for JoyPlatform demands
-     * transferToDeposit is similar to erc223 transferToContract function, but requires different receiver function.
+     * transferToGame is similar to erc223 transferToContract function, but requires different receiver function.
      * This approach allows additional specific behavior for the needs of JoyPlatform
      * transfer is possible only to another contract supporting customDeposit
      **/
-    function transferToDeposit(address _to, uint256 _value, bytes _data) public returns (bool success) {
+    function transferToGame(address _to, uint256 _value, bytes _data) public returns (bool success) {
         require(isContract(_to));
 
         success = token.transferFrom(msg.sender, _to, _value);
