@@ -8,5 +8,5 @@ import './ERC223ReceivingContract.sol';
  */
 contract JoyReceivingContract is ERC223ReceivingContract {
     //  customDeposit function analogous to tokenFallback function in ERC223ReceivingContract
-    function customDeposit(address _from, uint256 _value, bytes _data) external;
+    function customDeposit(address _from, address _game, uint256 _value, bytes _data) external;
 }

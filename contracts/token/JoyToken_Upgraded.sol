@@ -46,8 +46,8 @@ contract JoyTokenUpgraded {
     // Event for ERC223 transfers that contain additional data.
     event ERC223Transfer(address indexed from, address indexed to, uint256 value, bytes data);
 
-    // Special Event for transferToDeposit function.
-    event CustomDeposit(address indexed from, address indexed to, uint256 value, bytes data);
+    // Special Event for transferToGame function.
+    event CustomDeposit(address indexed from, address indexed to, address indexed game, uint256 value, bytes data);
 
     /**
      * ERC223 Reference implementation
@@ -109,15 +109,15 @@ contract JoyTokenUpgraded {
      * This approach allows additional specific behavior for the needs of JoyPlatform
      * transfer is possible only to another contract supporting customDeposit
      **/
-    function transferToGame(address _to, uint256 _value, bytes _data) public returns (bool success) {
+    function transferToGame(address _to, address _game, uint256 _value, bytes _data) public returns (bool success) {
         require(isContract(_to));
 
         success = token.transferFrom(msg.sender, _to, _value);
         if (!success) { revert(); }
 
         JoyReceivingContract receiver = JoyReceivingContract(_to);
-        receiver.customDeposit(msg.sender, _value, _data);
-        emit CustomDeposit(msg.sender, _to, _value, _data);
+        receiver.customDeposit(msg.sender, _game, _value, _data);
+        emit CustomDeposit(msg.sender, _to, _game, _value, _data);
     }
 
     /**

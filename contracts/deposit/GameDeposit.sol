@@ -47,10 +47,19 @@ contract GameDeposit is PlatformDeposit, JoyReceivingContract, Ownable {
      * This contract could receive tokens, designed analogous to tokenFallback function from erc223.
      * throw exception if tokens is not supported
      */
-    function customDeposit(address _from, uint256 _value, bytes) external {
+    function customDeposit(address _playerAddr, address _gameContractAddress, uint256 _value, bytes) external {
         require(JoyTokenUpgraded(msg.sender).getUnderlyingTokenAddress() == address(m_supportedToken));
 
-        lockedFunds[_from] = lockedFunds[_from].add(_value);
+        lockedFunds[_playerAddr] = lockedFunds[_playerAddr].add(_value);
+
+        // Create local joyGame object using address of given gameContract.
+        JoyGameAbstract joyGame = JoyGameAbstract(_gameContractAddress);
+
+        // Require this contract and gameContract to be owned by the same address.
+        // This check prevents interaction with this contract from external contracts
+        require(joyGame.owner() == owner);
+
+        joyGame.startGame(_playerAddr, _value);
     }
 
     /**
