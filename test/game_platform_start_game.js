@@ -5,12 +5,12 @@ const JoyGameDemo = artifacts.require('JoyGameDemo');
 const Web3 = require('web3');
 
 
-contract('JoyToken_TransferToGame', (accounts) => {
+contract('GamePlatform_StartGame', (accounts) => {
 	const web3 = new Web3();
 	web3.setProvider(JoyTokenUpgraded.web3.currentProvider);
 
 	// We can do this because JoyToken have same number of decimal places
-	const testAmount = web3.utils.toWei('10', 'ether');
+	const testAmount = web3.utils.toWei('5', 'ether');
 
 	let joyTokenInstance;
 	let joyTokenERC223;
@@ -29,12 +29,13 @@ contract('JoyToken_TransferToGame', (accounts) => {
 		// allowances
 		await joyTokenInstance.approve(joyTokenERC223.address, testAmount, { from: accounts[2] });
 
-
-		await joyTokenERC223.transferToGame(
+		// standard transfer
+		await joyTokenERC223.transfer(
 			depositInstance.address,
-			joyGameInstance.address,
-			testAmount, '0x', { from: accounts[2] }
+			testAmount, { from: accounts[2] }
 		);
+
+		await depositInstance.transferToGame(accounts[2], joyGameInstance.address);
 	});
 
 	afterEach(async () => {
