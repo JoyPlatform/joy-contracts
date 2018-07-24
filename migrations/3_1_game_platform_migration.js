@@ -2,7 +2,7 @@ const config = require('../config.json');
 
 const JoyToken = artifacts.require('JoyToken');
 const GameDeposit = artifacts.require('GameDeposit');
-const JoyGameDemo = artifacts.require('JoyGameDemo');
+const JoyGamePlatform = artifacts.require('JoyGamePlatform');
 
 
 module.exports = (deployer) => {
@@ -10,5 +10,5 @@ module.exports = (deployer) => {
 		.then(() =>
 			deployer.deploy(GameDeposit, JoyToken.address, config.platformReserve))
 		.then(() =>
-			deployer.deploy(JoyGameDemo, GameDeposit.address, config.gameDeveloper));
+			deployer.deploy(JoyGamePlatform, GameDeposit.address, config.gameDeveloper));
 };

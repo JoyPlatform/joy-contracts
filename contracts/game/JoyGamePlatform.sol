@@ -9,11 +9,11 @@ import './JoyGameAbstract.sol';
 
 
 /**
- * @title JoyGameDemo
+ * @title JoyGamePlatform
  * Contract that is responsible only for one game, and uses external given deposit contract
  */
-contract JoyGameDemo is JoyGameAbstract {
-    using SafeMath for uint;
+contract JoyGamePlatform is JoyGameAbstract {
+    using SafeMath for uint256;
 
     /**
      * @dev map containing information if given player have open game session.
@@ -64,18 +64,19 @@ contract JoyGameDemo is JoyGameAbstract {
         // non registred contracts are not allowed to affect to this game contract
         require(msg.sender == address(m_playersDeposit));
 
-        // don't allow player to have two open sessions
-        require(openSessions[_player] == false);
+        // depends on openSessions, refresh or start new game session
+        if(openSessions[_player]) {
+          emit RefreshGameSession(_player, _value);
+        } else {
+          openSessions[_player] = true;
 
-        openSessions[_player] = true;
-
-        // brodcast log about new session
-        // listening game server should start game after confirmation transaction containing execution of this function
-        emit NewGameSession(_player, _value);
+          emit NewGameSession(_player, _value);
+        }
     }
 
     //----------------------------------------- end session -------------------------------------------
 
+    // trigger for endGame, onlyOwner
     function responseFromWS(address _playerAddr, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
         endGame(GameOutcome(_playerAddr, _finalBalance, hashOfGameProcess) );
     }
@@ -85,14 +86,13 @@ contract JoyGameDemo is JoyGameAbstract {
      * @dev Save provable outcome of the game and distribute Tokens to gameDev, platform, and player
      * @param _gameOutcome struct with last updated amount of the WS wallets along with the Hash of provable data
      */
-
     function endGame(GameOutcome _gameOutcome) internal {
         // Save initial player funds to stack variable
-        uint256 gameLockedFunds = playerLockedFunds(_gameOutcome.player);
+        uint256 l_gameLockedFunds = playerLockedFunds(_gameOutcome.player);
 
         // double check if given player had possibility to play.
         // his lockedDeposit needed to be non-zero/positive.
-        require(gameLockedFunds > 0);
+        require(l_gameLockedFunds > 0);
 
         // Initial wrapping and real Tokens distribiution in deposit contract
         m_playersDeposit.accountGameResult(_gameOutcome.player, _gameOutcome.finalBalance);
@@ -102,7 +102,7 @@ contract JoyGameDemo is JoyGameAbstract {
 
         // populate finite game info in transaction logs
         emit EndGameInfo(_gameOutcome.player,
-                    gameLockedFunds,
+                    l_gameLockedFunds,
                     _gameOutcome.finalBalance,
                     _gameOutcome.hashOfGameProcess);
     }

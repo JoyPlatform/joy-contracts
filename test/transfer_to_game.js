@@ -1,7 +1,7 @@
 const JoyToken = artifacts.require('JoyToken');
 const JoyTokenUpgraded = artifacts.require('JoyTokenUpgraded');
 const GameDeposit = artifacts.require('GameDeposit');
-const JoyGameDemo = artifacts.require('JoyGameDemo');
+const JoyGamePlatform = artifacts.require('JoyGamePlatform');
 const Web3 = require('web3');
 
 
@@ -22,7 +22,7 @@ contract('JoyToken_TransferToGame', (accounts) => {
 		joyTokenERC223 = await JoyTokenUpgraded.deployed();
 
 		depositInstance = await GameDeposit.deployed();
-		joyGameInstance = await JoyGameDemo.deployed();
+		joyGameInstance = await JoyGamePlatform.deployed();
 
 		await joyTokenInstance.transfer(accounts[2], testAmount, { from: accounts[0] });
 

@@ -10,10 +10,13 @@ contract JoyGameAbstract is Ownable {
      */
     address public gameDev;
 
-    // Event that will broadcast in blockchain information about new game session
+    // Event about new game session started
     event NewGameSession(address indexed player, uint256 start_balance);
 
-    // Event that will broadcast in blockchain information about finite game session
+    // Event about refreshed with new funds game session
+    event RefreshGameSession(address indexed player, uint256 increased_value);
+
+    // Event about finite game session
     event EndGameInfo(address indexed player, uint256 start_balance, uint256 finalBalance, bytes32 indexed hashOfGameProcess);
 
     /**
