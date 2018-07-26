@@ -71,7 +71,7 @@ contract('GamePlatform_Events', (accounts) => {
 
 				event.stopWatching();
 
-				depositInstance.playerLockedFunds(accounts[3])
+				joyGameInstance.playerLockedFunds(accounts[3])
 					.then((lockedPlayerFunds) => {
 						assert.ok(lockedPlayerFunds.eq(new BN(testAmount)));
 						done();

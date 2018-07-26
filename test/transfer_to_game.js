@@ -49,7 +49,7 @@ contract('JoyToken_TransferToGame', (accounts) => {
 
 
 	it('playerLockedFunds_in_deposit', (done) => {
-		depositInstance.playerLockedFunds(accounts[2])
+		depositInstance.playerLockedFunds(accounts[2], joyGameInstance.address)
 			.then((lockedFunds) => {
 				assert.ok(lockedFunds.eq(testAmount), 'Bad lockedFunds amount.');
 				done();

@@ -35,7 +35,7 @@ contract('GamePlatform_StartGame', (accounts) => {
 			testAmount, { from: accounts[2] }
 		);
 
-		await depositInstance.transferToGame(accounts[2], joyGameInstance.address);
+		await depositInstance.transferToGame(joyGameInstance.address, testAmount, { from: accounts[2] });
 	});
 
 	afterEach(async () => {
@@ -50,7 +50,7 @@ contract('GamePlatform_StartGame', (accounts) => {
 
 
 	it('playerLockedFunds_in_deposit', (done) => {
-		depositInstance.playerLockedFunds(accounts[2])
+		depositInstance.playerLockedFunds(accounts[2], joyGameInstance.address)
 			.then((lockedFunds) => {
 				assert.ok(lockedFunds.eq(testAmount), 'Bad lockedFunds amount.');
 				done();

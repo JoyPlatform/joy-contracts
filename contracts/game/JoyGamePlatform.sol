@@ -32,7 +32,7 @@ contract JoyGamePlatform is JoyGameAbstract {
      * Funds that are locked for the time of the game and waiting for game outcome.
      */
     function playerLockedFunds(address _player) public view returns (uint256) {
-        return m_playersDeposit.playerLockedFunds(_player);
+        return m_playersDeposit.playerLockedFunds(_player, address(this));
     }
 
     /**
