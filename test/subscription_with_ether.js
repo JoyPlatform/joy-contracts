@@ -4,6 +4,7 @@ const Web3 = require('web3');
 
 contract('Subscription_with_ether', (accounts) => {
 	const web3 = new Web3();
+	const { BN } = web3.utils;
 	web3.setProvider(SubscriptionWithEther.web3.currentProvider);
 
 	const defaultPrice = web3.utils.toWei('20', 'Gwei');
@@ -147,7 +148,10 @@ contract('Subscription_with_ether', (accounts) => {
 					const ownerBalance = await web3.eth.getBalance(owner);
 
 					// assume that totalPrice is bigger than gas consumed with payOut tx
-					assert.ok(ownerBalance > ownerBalanceBefore, 'Can not be strict because of gas price');
+					assert.ok(
+						(new BN(ownerBalance)).gt(new BN(ownerBalanceBefore)),
+						'Can not be strict because of gas price'
+					);
 					resolve();
 				});
 		}));

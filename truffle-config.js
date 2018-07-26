@@ -13,6 +13,13 @@ module.exports = {
 			network_id: '*',
 			gas: 6000000,
 			gasPrice: 14000000000 // 14Gwei
+		},
+		coverage: {
+			host: 'localhost',
+			network_id: '*',
+			port: 8555,
+			gas: 0xfffffffffff,
+			gasPrice: 0x01
 		}
 	}
 };

@@ -6,6 +6,7 @@
   "scripts": {
     "ganache": "./node_modules/.bin/ganache-cli",
     "test": "./node_modules/.bin/truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage",
     "lint": "eslint test"
   },
   "devDependencies": {
@@ -13,12 +14,14 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "babel-register": "^6.26.0",
+    "coveralls": "^3.0.2",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-import": "^2.12.0",
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.7.0",
     "ganache-cli": "^6.1.0",
+    "solidity-coverage": "^0.5.5",
     "solium": "^1.1.7",
     "truffle": "^4.1.9",
     "web3": "^1.0.0-beta.34"
