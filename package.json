@@ -5,8 +5,8 @@
   "main": ".",
   "scripts": {
     "ganache": "./node_modules/.bin/ganache-cli",
-    "test": "./node_modules/.bin/truffle test",
-    "coverage": "./node_modules/.bin/solidity-coverage",
+    "test": "scripts/test.sh",
+    "coverage": "scripts/coverage.sh",
     "lint": "eslint test"
   },
   "devDependencies": {

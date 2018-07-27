@@ -12,7 +12,6 @@ script:
   - npm run test
 before_script:
   - truffle version
-  - npm run ganache > /dev/null &
-  - sleep 5
+  - ./scripts/generate_test_config.sh
 after_script:
   - npm run coverage && cat coverage/lcov.info | node_modules/.bin/coveralls
