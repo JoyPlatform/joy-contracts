@@ -51,26 +51,33 @@ contract PlatformDeposit is ERC223ReceivingContract {
         deposits[_from] = deposits[_from].add(_value);
     }
 
+
     /**
-     * @dev Function that could be executed by players to withdraw their deposit
+     * @dev Generalization of deposit payOut, only for internal use!.
      */
-    function payOut(address _to, uint256 _value) public {
-        // use transfer function from supported token.
-        // should be used from player address that was registered in deposits
-        require(_value <= deposits[msg.sender], "Player balance is to low.");
+    function payOutInternal(address _from, address _to, uint256 _value) internal {
+        require(_value <= deposits[_from], "Deposit balance is to low.");
 
         /**
          * Prevents payOut to the contract address.
          * This trick deprives owner incentives to steal Tokens from players.
          * Even if owner use 'transferToGame' method to transfer some deposits to the fake contract,
-         * he will not be able to withdraw Tokens to any private address.
+         * he will not be able to withdraw real Tokens.
          */
         require(isContract(_to) == false, "Address given should not be address of the contract.");
 
-        deposits[msg.sender] = deposits[msg.sender].sub(_value);
+        deposits[_from] = deposits[_from].sub(_value);
 
         // Use m_supportedToken method to transfer real Tokens.
         m_supportedToken.transfer(_to, _value);
+    }
+
+    /**
+     * @dev Function that could be executed publicly by players to withdraw their deposit
+     */
+    function payOut(address _to, uint256 _value) public {
+        // _from == msg.sender
+        payOutInternal(msg.sender, _to, _value);
     }
 
     //---------------------- utils ---------------------------
