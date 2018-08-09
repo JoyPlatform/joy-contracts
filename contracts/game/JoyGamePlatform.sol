@@ -76,9 +76,18 @@ contract JoyGamePlatform is JoyGameAbstract {
 
     //----------------------------------------- end session -------------------------------------------
 
-    // trigger for endGame, onlyOwner
-    function responseFromWS(address _playerAddr, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
-        endGame(GameOutcome(_playerAddr, _finalBalance, hashOfGameProcess) );
+    // trigger for endGame, that accountGameResult in registred deposit, onlyOwner
+    function accountGameResult(address _player, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
+        endGame(GameOutcome(_player, _finalBalance, hashOfGameProcess));
+
+        m_playersDeposit.accountGameResult(_player, _finalBalance);
+    }
+
+    // trigger for endGame, that payOutGameResult in registred deposit, onlyOwner
+    function payOutGameResult(address _player, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
+        endGame(GameOutcome(_player, _finalBalance, hashOfGameProcess));
+
+        m_playersDeposit.payOutGameResult(_player, _finalBalance);
     }
 
     /**
@@ -93,9 +102,6 @@ contract JoyGamePlatform is JoyGameAbstract {
         // double check if given player had possibility to play.
         // his lockedDeposit needed to be non-zero/positive.
         require(l_gameLockedFunds > 0);
-
-        // Initial wrapping and real Tokens distribiution in deposit contract
-        m_playersDeposit.accountGameResult(_gameOutcome.player, _gameOutcome.finalBalance);
 
         // close player game session
         openSessions[_gameOutcome.player] = false;

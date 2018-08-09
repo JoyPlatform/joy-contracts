@@ -119,14 +119,14 @@ contract GameDeposit is PlatformDeposit, JoyReceivingContract, Ownable {
         joyGame.startGame(msg.sender, _value);
     }
 
+
     /**
-     * @dev function that can be called from registered 'game contract' after closing player session to update state.
+     * @dev function that distributes winnings after closing game player session.
      *
-     * Unlock Tokens from game contract and distribute Tokens according to final balance.
      * @param _player address of player that end his game session
      * @param _finalBalance value that determine player wins and losses
      */
-    function accountGameResult(address _player, uint256 _finalBalance) external {
+    function accountGameResult(address _player, uint256 _finalBalance) public {
         // msg.sender is a gameContract here
         JoyGameAbstract joyGame = JoyGameAbstract(msg.sender);
         uint256 l_playerLockedFunds = lockedFunds[_player][msg.sender];
@@ -135,35 +135,22 @@ contract GameDeposit is PlatformDeposit, JoyReceivingContract, Ownable {
         // must be the same owner
         require(joyGame.owner() == owner);
 
-        // case where player deposit does not change
-        if(_finalBalance == l_playerLockedFunds) {
-            unlockPlayerFunds(_player, msg.sender, l_playerLockedFunds);
-        }
         // case where player wins
-        else if (_finalBalance > l_playerLockedFunds) {
+        if (_finalBalance > l_playerLockedFunds) {
             uint256 playerEarnings = _finalBalance.sub(l_playerLockedFunds);
 
             // check if contract is able to pay player a win
             require(playerEarnings <= deposits[platformReserve], "platformReserve deposit is too small to cover the winning");
-
-            // unlock all player funds
-            unlockPlayerFunds(_player, msg.sender, l_playerLockedFunds);
 
             // with additional win from platformReserve
             deposits[platformReserve] = deposits[platformReserve].sub(playerEarnings);
             deposits[_player] = deposits[_player].add(playerEarnings);
         }
         // case where player lose
-        else {
+        else if (_finalBalance < l_playerLockedFunds) {
             // substract player loss from player locked funds
             uint256 playerLoss = lockedFunds[_player][msg.sender].sub(_finalBalance);
             lockedFunds[_player][msg.sender] = _finalBalance;
-
-            // if do not lose all
-            if (lockedFunds[_player][msg.sender] != 0) {
-                // unlock rest of the player funds
-                unlockPlayerFunds(_player, msg.sender, _finalBalance);
-            }
 
             // distribute player Token loss to gameDev and platformReserve in 1:1 ratio
             // for odd loss additional Token goes to platformReserve
@@ -175,6 +162,24 @@ contract GameDeposit is PlatformDeposit, JoyReceivingContract, Ownable {
 
             deposits[l_gameDev] = deposits[l_gameDev].add(gameDeveloperPart);
             deposits[platformReserve] = deposits[platformReserve].add(platformReservePart);
+        }
+
+        // if do not lose all
+        if (lockedFunds[_player][msg.sender] != 0) {
+            // unlock rest of the player funds
+            unlockPlayerFunds(_player, msg.sender, _finalBalance);
+        }
+    }
+
+    /**
+     * @dev accountGameResult and payOut player winnings directly to the player wallet.
+     */
+    function payOutGameResult(address _player, uint256 _finalBalance) external {
+        accountGameResult(_player, _finalBalance);
+
+        if (balanceOfPlayer(_player) != 0) {
+            // _from _player deposit to _player public address
+            payOutInternal(_player, _player, balanceOfPlayer(_player));
         }
     }
 }
