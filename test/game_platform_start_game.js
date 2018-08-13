@@ -47,7 +47,7 @@ contract('GamePlatform_StartGame', (accounts) => {
 		const finalBalance = '0';
 		const platformOwner = await depositInstance.owner();
 
-		await joyGameInstance.responseFromWS(accounts[4], finalBalance, testGameHash, { from: platformOwner });
+		await joyGameInstance.accountGameResult(accounts[4], finalBalance, testGameHash, { from: platformOwner });
 	});
 
 

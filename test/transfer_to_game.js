@@ -45,7 +45,7 @@ contract('JoyToken_TransferToGame', (accounts) => {
 		const finalBalance = '0';
 		const platformOwner = await depositInstance.owner();
 
-		await joyGameInstance.responseFromWS(accounts[5], finalBalance, testGameHash, { from: platformOwner });
+		await joyGameInstance.accountGameResult(accounts[5], finalBalance, testGameHash, { from: platformOwner });
 	});
 
 

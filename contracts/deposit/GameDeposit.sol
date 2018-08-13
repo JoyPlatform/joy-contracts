@@ -144,7 +144,7 @@ contract GameDeposit is PlatformDeposit, JoyReceivingContract, Ownable {
 
             // with additional win from platformReserve
             deposits[platformReserve] = deposits[platformReserve].sub(playerEarnings);
-            deposits[_player] = deposits[_player].add(playerEarnings);
+            lockedFunds[_player][msg.sender] = lockedFunds[_player][msg.sender].add(playerEarnings);
         }
         // case where player lose
         else if (_finalBalance < l_playerLockedFunds) {
