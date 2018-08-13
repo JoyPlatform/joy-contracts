@@ -4,7 +4,7 @@ const GameDeposit = artifacts.require('GameDeposit');
 const JoyGamePlatform = artifacts.require('JoyGamePlatform');
 const Web3 = require('web3');
 
-contract('Account_Game_Result', (accounts) => {
+contract('PayOut_Game_Result', (accounts) => {
 	const web3 = new Web3();
 	const { BN } = web3.utils;
 	web3.setProvider(JoyTokenUpgraded.web3.currentProvider);
@@ -56,7 +56,7 @@ contract('Account_Game_Result', (accounts) => {
 
 		const playerLockedBalance = await depositInstance.playerLockedFunds(testPlayer, joyGameInstance.address);
 		if (playerLockedBalance.gt(new BN('0'))) {
-			await joyGameInstance.accountGameResult(
+			await joyGameInstance.payOutGameResult(
 				testPlayer,
 				playerLockedBalance,
 				testGameHash,
@@ -65,18 +65,17 @@ contract('Account_Game_Result', (accounts) => {
 		}
 	});
 
-
 	function checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings) {
 		// generate randon hex bytes32 as gameHash
 		const testGameHash = web3.utils.randomHex(32);
 
 		return new Promise(async (resolve, reject) => {
-			const initialPlayerBalance = await depositInstance.balanceOfPlayer(testPlayer);
+			const initialPlayerBalance = await joyTokenERC223.balanceOf(testPlayer);
 			const initialReserveBalance = await depositInstance.balanceOfPlayer(platformReserve);
 			const initialGameDevBalance = await depositInstance.balanceOfPlayer(gameDeveloper);
 
 			try {
-				await joyGameInstance.accountGameResult(
+				await joyGameInstance.payOutGameResult(
 					testPlayer,
 					finalBalance.toString(),
 					testGameHash,
@@ -87,8 +86,8 @@ contract('Account_Game_Result', (accounts) => {
 				return;
 			}
 
-			// balance in deposit
-			const playerBalance = await depositInstance.balanceOfPlayer(testPlayer);
+			// balance in wallet
+			const playerBalance = await joyTokenERC223.balanceOf(testPlayer);
 
 			assert.ok(
 				playerBalance.eq(initialPlayerBalance.add(finalBalance)),
