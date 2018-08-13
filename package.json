@@ -4,7 +4,7 @@
   "description": "JoyPlatform - Testing and deployment envirnonment for solidity smart-contracts",
   "main": ".",
   "scripts": {
-    "ganache": "./node_modules/.bin/ganache-cli",
+    "ganache": "scripts/ganache.sh",
     "test": "scripts/test.sh",
     "coverage": "scripts/coverage.sh",
     "lint": "eslint test"
@@ -21,6 +21,7 @@
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.7.0",
     "ganache-cli": "^6.1.0",
+    "json": "^9.0.6",
     "solidity-coverage": "^0.5.5",
     "solium": "^1.1.7",
     "truffle": "^4.1.9",

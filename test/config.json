@@ -1,4 +1,7 @@
 {
+	"ganache_port": 8545,
+	"testrpc_port": 8555,
+
 	"mnemonic":"address capable juice burden general creek bargain they script ball awake collect",
 	"accounts": [
 		"0x912e8f7b5a00c0d58c391f95c4919adba076d870",

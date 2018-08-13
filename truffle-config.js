@@ -1,3 +1,11 @@
+require("babel-polyfill");
+require('babel-register');
+
+const config = require('./config.json');
+const test_config = require('./test/config.json');
+
+const { platformOwner, ropsten_host, ropsten_port } = config;
+const { ganache_port, testrpc_port } = test_config;
 
 module.exports = {
 	solc: {
@@ -7,9 +15,17 @@ module.exports = {
 		}
 	},
 	networks: {
+		ropsten: {
+			host: ropsten_host,
+			port: ropsten_port,
+			network_id: '3',
+			from: platformOwner,
+			gas: 6000000,
+			gasPrice: 16000000000
+		},
 		development: {
 			host: 'localhost',
-			port: 8545,
+			port: ganache_port,
 			network_id: '*',
 			gas: 6000000,
 			gasPrice: 14000000000 // 14Gwei
@@ -17,7 +33,7 @@ module.exports = {
 		coverage: {
 			host: 'localhost',
 			network_id: '*',
-			port: 8555,
+			port: testrpc_port,
 			gas: 0xfffffffffff,
 			gasPrice: 0x01
 		}

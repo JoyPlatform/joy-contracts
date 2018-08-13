@@ -14,9 +14,9 @@ cleanup() {
 }
 
 if [ "$SOLIDITY_COVERAGE" = true ]; then
-  ganache_port=8555
+  ganache_port=$(cat "test/config.json" | node_modules/.bin/json testrpc_port)
 else
-  ganache_port=8545
+  ganache_port=$(cat "test/config.json" | node_modules/.bin/json ganache_port)
 fi
 
 ganache_running() {
@@ -24,12 +24,12 @@ ganache_running() {
 }
 
 start_ganache() {
-	local mnemonic=`cat "test/accounts.json" | python3 -c "import sys, json; print(json.load(sys.stdin)['mnemonic'])"`
+  local mnemonic=$(cat "test/config.json" | node_modules/.bin/json mnemonic)
 
   if [ "$SOLIDITY_COVERAGE" = true ]; then
-   node_modules/.bin/testrpc-sc --gasLimit 0xfffffffffff --port "$ganache_port"  --mnemonic "${mnemonic}" > /dev/null &
+    node_modules/.bin/testrpc-sc --gasLimit 0xfffffffffff --port "$ganache_port"  --mnemonic "${mnemonic}" > /dev/null &
   else
-    node_modules/.bin/ganache-cli --gasLimit 0xfffffffffff --mnemonic "${mnemonic}" > /dev/null &
+    scripts/ganache.sh > /dev/null &
   fi
 
   ganache_pid=$!
