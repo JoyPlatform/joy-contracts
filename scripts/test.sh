@@ -9,7 +9,13 @@ trap cleanup EXIT
 cleanup() {
   # Kill the ganache instance that we started (if we started one and if it's still running).
   if [ -n "$ganache_pid" ] && ps -p $ganache_pid > /dev/null; then
-    kill -9 $ganache_pid
+    if [ "$SOLIDITY_COVERAGE" = true ]; then
+      kill -9 $ganache_pid
+    else
+      # bacause we are using another script, process group ID is needed (PGID)
+      local pgid=$(ps -o pgid= $ganache_pid | grep -o [0-9]*)
+      kill -9 -$pgid
+    fi
   fi
 }
 
