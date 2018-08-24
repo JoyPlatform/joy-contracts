@@ -46,7 +46,8 @@ contract PlatformDeposit is ERC223ReceivingContract {
         // we will use this information to filter what token we accept as deposit
 
         // require tokens sent with erc221 upgraded contract to be exac same as supported erc20 tokens
-        require(JoyTokenUpgraded(msg.sender).getUnderlyingTokenAddress() == address(m_supportedToken));
+        require(JoyTokenUpgraded(msg.sender).getUnderlyingTokenAddress() == address(m_supportedToken),
+            "send of unsupporteted token");
 
         deposits[_from] = deposits[_from].add(_value);
     }

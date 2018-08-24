@@ -77,17 +77,25 @@ contract JoyGamePlatform is JoyGameAbstract {
     //----------------------------------------- end session -------------------------------------------
 
     // trigger for endGame, that accountGameResult in registred deposit, onlyOwner
-    function accountGameResult(address _player, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
-        endGame(GameOutcome(_player, _finalBalance, hashOfGameProcess));
+    function accountGameResult(address _player,
+                               uint256 _remainBalance,
+                               uint256 _finalBalance,
+                               bytes32 hashOfGameProcess) public onlyOwner {
 
-        m_playersDeposit.accountGameResult(_player, _finalBalance);
+        endGame(GameOutcome(_player, _remainBalance, _finalBalance, hashOfGameProcess));
+
+        m_playersDeposit.accountGameResult(_player, _remainBalance, _finalBalance);
     }
 
     // trigger for endGame, that payOutGameResult in registred deposit, onlyOwner
-    function payOutGameResult(address _player, uint256 _finalBalance, bytes32 hashOfGameProcess) public onlyOwner {
-        endGame(GameOutcome(_player, _finalBalance, hashOfGameProcess));
+    function payOutGameResult(address _player,
+                              uint256 _remainBalance,
+                              uint256 _finalBalance,
+                              bytes32 hashOfGameProcess) public onlyOwner {
 
-        m_playersDeposit.payOutGameResult(_player, _finalBalance);
+        endGame(GameOutcome(_player, _remainBalance, _finalBalance, hashOfGameProcess));
+
+        m_playersDeposit.payOutGameResult(_player, _remainBalance, _finalBalance);
     }
 
     /**
@@ -101,15 +109,18 @@ contract JoyGamePlatform is JoyGameAbstract {
 
         // double check if given player had possibility to play.
         // his lockedDeposit needed to be non-zero/positive.
-        require(l_gameLockedFunds > 0);
+        require(l_gameLockedFunds > 0, "player has not funds locked in game");
 
-        // close player game session
-        openSessions[_gameOutcome.player] = false;
+        // close player game session only if there is not remaining balance.
+        if (_gameOutcome.remainBalance == 0) {
+            openSessions[_gameOutcome.player] = false;
+        }
 
-        // populate finite game info in transaction logs
+        // populate finite/accounted game info in transaction logs
         emit EndGameInfo(_gameOutcome.player,
-                    l_gameLockedFunds,
-                    _gameOutcome.finalBalance,
-                    _gameOutcome.hashOfGameProcess);
+                         l_gameLockedFunds,
+                         _gameOutcome.remainBalance,
+                         _gameOutcome.finalBalance,
+                         _gameOutcome.hashOfGameProcess);
     }
 }

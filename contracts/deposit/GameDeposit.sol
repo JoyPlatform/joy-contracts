@@ -124,16 +124,20 @@ contract GameDeposit is PlatformDeposit, JoyReceivingContract, Ownable {
      * @dev function that distributes winnings after closing game player session.
      *
      * @param _player address of player that end his game session
+     * @param _remainBalance amount of tokens that will stay locked in game
      * @param _finalBalance value that determine player wins and losses
      */
-    function accountGameResult(address _player, uint256 _finalBalance) public {
+    function accountGameResult(address _player, uint256 _remainBalance, uint256 _finalBalance) public {
+        // In case of _remainBalance == _finalBalance, means not unlocking any tokens from game.
+        require(_remainBalance <= _finalBalance, "insufficient winnings for given remaining balance");
+
         // msg.sender is a gameContract here
         JoyGameAbstract joyGame = JoyGameAbstract(msg.sender);
         uint256 l_playerLockedFunds = lockedFunds[_player][msg.sender];
 
         // check if game contract is allowed to interact with this contract
         // must be the same owner
-        require(joyGame.owner() == owner);
+        require(joyGame.owner() == owner, "joyGame contract is not allowed to interact with this deposit");
 
         // case where player wins
         if (_finalBalance > l_playerLockedFunds) {
@@ -164,18 +168,19 @@ contract GameDeposit is PlatformDeposit, JoyReceivingContract, Ownable {
             deposits[platformReserve] = deposits[platformReserve].add(platformReservePart);
         }
 
-        // if do not lose all
-        if (lockedFunds[_player][msg.sender] != 0) {
-            // unlock rest of the player funds
-            unlockPlayerFunds(_player, msg.sender, _finalBalance);
+        // if do not lose all and do not remaining all
+        if (lockedFunds[_player][msg.sender] != 0 && _remainBalance != _finalBalance) {
+            uint256 l_fundsToUnlock = _finalBalance.sub(_remainBalance);
+            // unlock rest of the player funds, excluding remaining balance.
+            unlockPlayerFunds(_player, msg.sender, l_fundsToUnlock);
         }
     }
 
     /**
      * @dev accountGameResult and payOut player winnings directly to the player wallet.
      */
-    function payOutGameResult(address _player, uint256 _finalBalance) external {
-        accountGameResult(_player, _finalBalance);
+    function payOutGameResult(address _player, uint256 _remainBalance, uint256 _finalBalance) external {
+        accountGameResult(_player, _remainBalance, _finalBalance);
 
         if (balanceOfPlayer(_player) != 0) {
             // _from _player deposit to _player public address

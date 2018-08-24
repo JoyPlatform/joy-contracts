@@ -3,7 +3,6 @@ pragma solidity ^0.4.23;
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract JoyGameAbstract is Ownable {
-
     /**
      * gameDevAddr is a developer of a game, this address is needed at the end of each game session;
      * part of platform profits will be distributed to this address
@@ -17,7 +16,11 @@ contract JoyGameAbstract is Ownable {
     event RefreshGameSession(address indexed player, uint256 increased_value);
 
     // Event about finite game session
-    event EndGameInfo(address indexed player, uint256 start_balance, uint256 finalBalance, bytes32 indexed hashOfGameProcess);
+    event EndGameInfo(address indexed player,
+                      uint256 start_balance,
+                      uint256 remainBalance,
+                      uint256 finalBalance,
+                      bytes32 indexed hashOfGameProcess);
 
     /**
      * @dev Abstract external function that starts game session.
@@ -32,9 +35,9 @@ contract JoyGameAbstract is Ownable {
      */
     struct GameOutcome {
         address player;
-        uint256 finalBalance;
-        // Hashed course of the finite game
-        bytes32 hashOfGameProcess;
+        uint256 remainBalance; // balance that stays in the game
+        uint256 finalBalance; // actual player balance got from game server
+        bytes32 hashOfGameProcess; // Hashed course of the finite game
     }
 
     /**
