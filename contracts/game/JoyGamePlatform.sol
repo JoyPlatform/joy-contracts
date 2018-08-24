@@ -66,11 +66,11 @@ contract JoyGamePlatform is JoyGameAbstract {
 
         // depends on openSessions, refresh or start new game session
         if(openSessions[_player]) {
-          emit RefreshGameSession(_player, _value);
+            emit RefreshGameSession(_player, _value);
         } else {
-          openSessions[_player] = true;
+            openSessions[_player] = true;
 
-          emit NewGameSession(_player, _value);
+            emit NewGameSession(_player, _value);
         }
     }
 

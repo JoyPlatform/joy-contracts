@@ -9,11 +9,11 @@ import 'openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
  * `StandardToken` functions.
  */
 contract JoyToken is StandardToken {
-  string public constant name = "JoyToken";
-  string public constant symbol = "JOY";
-  uint8 public constant decimals = 18;
+    string public constant name = "JoyToken";
+    string public constant symbol = "JOY";
+    uint8 public constant decimals = 18;
 
-  uint256 public constant INITIAL_SUPPLY = 700000000 * (10 ** uint256(decimals));
+    uint256 public constant INITIAL_SUPPLY = 700000000 * (10 ** uint256(decimals));
 
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.

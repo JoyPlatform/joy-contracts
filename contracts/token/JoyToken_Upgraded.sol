@@ -20,25 +20,25 @@ contract JoyTokenUpgraded {
 
     // returns address of underlying erc20 token
     function getUnderlyingTokenAddress() public constant returns (address) {
-      return address(token);
+        return address(token);
     }
 
     // simple shims for trivial operations
     // ------------------ reimplementation for basic functions ------------------
     function name() public constant returns (string) {
-      return token.name();
+        return token.name();
     }
     function symbol() public constant returns (string) {
-      return token.symbol();
+        return token.symbol();
     }
     function balanceOf(address _owner) public constant returns (uint256) {
-      return token.balanceOf(_owner);
+        return token.balanceOf(_owner);
     }
     function decimals() public constant returns (uint8) {
-      return token.decimals();
+        return token.decimals();
     }
     function totalSupply() public constant returns (uint256) {
-      return token.totalSupply();
+        return token.totalSupply();
     }
 
     // -------------------- features inspired by erc223 idea --------------------
