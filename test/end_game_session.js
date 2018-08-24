@@ -1,10 +1,14 @@
+import sharedFunctions from './shared_functions';
+
 const JoyToken = artifacts.require('JoyToken');
 const JoyTokenUpgraded = artifacts.require('JoyTokenUpgraded');
 const GameDeposit = artifacts.require('GameDeposit');
 const JoyGamePlatform = artifacts.require('JoyGamePlatform');
 const Web3 = require('web3');
 
+
 contract('Account_Game_Result', (accounts) => {
+	const { settleAndCheck } = sharedFunctions;
 	const web3 = new Web3();
 	const { BN } = web3.utils;
 	web3.setProvider(JoyTokenUpgraded.web3.currentProvider);
@@ -52,12 +56,14 @@ contract('Account_Game_Result', (accounts) => {
 
 	// if player has open game session, close it with no lose and no winnings.
 	afterEach(async () => {
-		const testGameHash = web3.utils.randomHex(32);
-
 		const playerLockedBalance = await depositInstance.playerLockedFunds(testPlayer, joyGameInstance.address);
 		if (playerLockedBalance.gt(new BN('0'))) {
+			const testGameHash = web3.utils.randomHex(32);
+			const remainBalance = '0';
+
 			await joyGameInstance.accountGameResult(
 				testPlayer,
+				remainBalance,
 				playerLockedBalance,
 				testGameHash,
 				{ from: platformOwner }
@@ -65,64 +71,13 @@ contract('Account_Game_Result', (accounts) => {
 		}
 	});
 
-
-	function checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings) {
-		// generate randon hex bytes32 as gameHash
-		const testGameHash = web3.utils.randomHex(32);
-
-		return new Promise(async (resolve, reject) => {
-			const initialPlayerBalance = await depositInstance.balanceOfPlayer(testPlayer);
-			const initialReserveBalance = await depositInstance.balanceOfPlayer(platformReserve);
-			const initialGameDevBalance = await depositInstance.balanceOfPlayer(gameDeveloper);
-
-			try {
-				await joyGameInstance.accountGameResult(
-					testPlayer,
-					finalBalance.toString(),
-					testGameHash,
-					{ from: platformOwner }
-				);
-			} catch (err) {
-				reject(err);
-				return;
-			}
-
-			// balance in deposit
-			const playerBalance = await depositInstance.balanceOfPlayer(testPlayer);
-
-			assert.ok(
-				playerBalance.eq(initialPlayerBalance.add(finalBalance)),
-				'Player balance should by equal finalBalance.'
-			);
-
-			const lockedFunds = await depositInstance.playerLockedFunds(testPlayer, joyGameInstance.address);
-			assert.ok(
-				lockedFunds.eq(new BN('0')),
-				'Player locked funds should by equal to 0.'
-			);
-
-			const reserveBalance = await depositInstance.balanceOfPlayer(platformReserve);
-			assert.ok(
-				reserveBalance.eq(initialReserveBalance.add(reserveWinnings)),
-				'Reserve balance should be inceased.'
-			);
-
-			const gameDevBalance = await depositInstance.balanceOfPlayer(gameDeveloper);
-			assert.ok(
-				gameDevBalance.eq(initialGameDevBalance.add(gameDevWinnings)),
-				'GameDev balance should be inceased.'
-			);
-			resolve();
-		});
-	}
-
 	it('player_win_unsuccessful', (done) => {
 		const finalBalance = (new BN(testAmount)).mul(new BN('2'));
 		// winnings are paid from platformReserve
 		const reserveWinnings = (new BN(testAmount)).neg();
 		const gameDevWinnings = new BN('0');
 
-		checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings)
+		settleAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings)
 			.catch((err) => {
 				assert.include(
 					err.message,
@@ -145,7 +100,7 @@ contract('Account_Game_Result', (accounts) => {
 			joyTokenInstance.approve(joyTokenERC223.address, testAmount, { from: platformReserve }),
 			joyTokenERC223.transfer(depositInstance.address, testAmount, { from: platformReserve })
 		])
-			.then(() => checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings))
+			.then(() => settleAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings))
 			.then(() => done());
 	});
 
@@ -155,7 +110,7 @@ contract('Account_Game_Result', (accounts) => {
 		const reserveWinnings = (new BN(testAmount)).div(new BN('2'));
 		const gameDevWinnings = reserveWinnings;
 
-		checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings)
+		settleAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings)
 			.then(() => done());
 	});
 
@@ -165,7 +120,7 @@ contract('Account_Game_Result', (accounts) => {
 		const reserveWinnings = (new BN(testAmount)).div(new BN('2'));
 		const gameDevWinnings = reserveWinnings.sub(new BN('1'));
 
-		checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings)
+		settleAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings)
 			.then(() => done());
 	});
 
@@ -174,7 +129,7 @@ contract('Account_Game_Result', (accounts) => {
 		const reserveWinnings = finalBalance.div(new BN('2'));
 		const gameDevWinnings = finalBalance.div(new BN('2'));
 
-		checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings)
+		settleAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings)
 			.then(() => done());
 	});
 
@@ -183,7 +138,7 @@ contract('Account_Game_Result', (accounts) => {
 		const reserveWinnings = new BN('0');
 		const gameDevWinnings = reserveWinnings;
 
-		checkAccountedBalances(finalBalance, reserveWinnings, gameDevWinnings)
+		settleAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings)
 			.then(() => done());
 	});
 });

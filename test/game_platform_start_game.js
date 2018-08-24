@@ -45,9 +45,15 @@ contract('GamePlatform_StartGame', (accounts) => {
 		const testGameHash = web3.utils.randomHex(32);
 		// playes lose all
 		const finalBalance = '0';
+		const remainBalance = '0';
 		const platformOwner = await depositInstance.owner();
 
-		await joyGameInstance.accountGameResult(accounts[4], finalBalance, testGameHash, { from: platformOwner });
+		await joyGameInstance.accountGameResult(
+			accounts[4],
+			remainBalance,
+			finalBalance,
+			testGameHash, { from: platformOwner }
+		);
 	});
 
 
