@@ -1,6 +1,6 @@
 # joy-contracts
-[![Build Status](https://img.shields.io/travis/JoyPlatform/joy-contracts.svg?branch=CI&style=flat-square)](https://travis-ci.org/JoyPlatform/joy-contracts)
-[![Coverage Status](https://img.shields.io/coveralls/github/JoyPlatform/joy-contracts/CI.svg?style=flat-square)](https://coveralls.io/github/JoyPlatform/joy-contracts?branch=CI)
+[![Build Status](https://img.shields.io/travis/JoyPlatform/joy-contracts.svg?branch=develop&style=flat-square)](https://travis-ci.org/JoyPlatform/joy-contracts)
+[![Coverage Status](https://img.shields.io/coveralls/github/JoyPlatform/joy-contracts/develop.svg?style=flat-square)](https://coveralls.io/github/JoyPlatform/joy-contracts?branch=develop)
 
 Joy Platform - main repository for testing and deploying smart-contracts.
 
@@ -54,89 +54,17 @@ Compiling ./contracts/token/StandardToken.sol...
 Writing artifacts to ./build/contracts
 ```
 
-Output is serialized as JSON and written to build/contracts.json
-
 ## running tests
 
 Tests are written using JS mocha and requires ganache-cli (testing Ethereum RPC client):
 
+All tests can be run:
+```
+$ npm run test
+```
+
+or if needed. Specific test file:
 ```
 $ npm run ganache
-$ npm run test  # in separated terminal/tab
-```
-#### example output:
-```
-Contract: GamePlatform_Events
-  ✓ NewGameSession_Event
-  ✓ RefreshGameSession_Event
-
-Contract: GamePlatform_StartGame
-  ✓ playerLockedFunds_in_deposit
-  ✓ playerLockedFunds_in_game
-  ✓ check_player_deposit
-  ✓ open_session_check
-
-Contract: JoyToken
-  ✓ JoyToken Name
-  ✓ JoyToken Symbol
-  ✓ JoyToken Decimal
-  ✓ Total Supply of JoyToken
-  ✓ Initialy the owner of contract have full totalSupply
-  Contract: Transfers Tests
-    ✓ Transfers - series of few transactions
-    ✓ Transfers failed - to big amount
-    ✓ Transfers failed - from empty
-
-Contract: JoyTokenUpgraded
-  ✓ JoyTokenUpgraded Name
-  ✓ JoyTokenUpgraded Symbol
-  ✓ JoyTokenUpgraded Decimal
-  ✓ Total Supply of JoyTokenUpgraded
-  Contract: JoyToken_OverloadedTransfer
-    ✓ Initialy the owner of contract have full totalSupply
-    ✓ Transfer with addtional data
-
-Contract: Deposit_Tests
-  Contract: PlatformDeposit_standalone
-    ✓ Transfer_to_deposit
-    ✓ Transfer_to_many
-    ✓ payOut_from_deposit
-    ✓ fail_to_friend
-    ✓ fail_payOut
-
-Contract: Deposit_Tests
-  Contract: GameDeposit
-    ✓ Transfer_to_deposit
-    ✓ Transfer_to_many
-    ✓ payOut_from_deposit
-    ✓ fail_to_friend
-    ✓ fail_payOut
-
-Contract: Subscription_with_ether
-  ✓ Check_price
-  ✓ Set_price_fail
-  ✓ Set_price
-  ✓ Buy_subscription_fail
-  ✓ Buy_subscription
-  ✓ Collected_funds
-  ✓ Payout_funds
-  ✓ Payout_funds_to_friend
-
-Contract: Subscription_with_joyToken
-  ✓ Check_price
-  ✓ Set_price_fail
-  ✓ Set_price
-  ✓ Buy_subscription_fail
-  ✓ Buy_subscription
-  ✓ Collected_funds
-  ✓ Payout_funds
-  ✓ Payout_funds_to_friend
-
-Contract: JoyToken_TransferToGame
-  ✓ playerLockedFunds_in_deposit
-  ✓ playerLockedFunds_in_game
-  ✓ check_player_deposit
-  ✓ open_session_check
-
-  50 passing
+$ truffle test test/testfile.js  # in separated terminal/tab
 ```
