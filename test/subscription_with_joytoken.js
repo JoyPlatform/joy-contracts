@@ -11,7 +11,7 @@ contract('Subscription_with_joyToken', (accounts) => {
 	const gasLimit = 200000;
 	const defaultPrice = 100;	// base units of JoyToken
 	const price2 = 120;
-	const testTokenAmount = 1000000;
+	const testTokenAmount = 10000000000;
 
 	let joyTokenInstance;
 	let joyTokenERC223;
@@ -102,10 +102,35 @@ contract('Subscription_with_joyToken', (accounts) => {
 				});
 		}));
 
+	it('Buy_subscription_too_many_bytes', () =>
+		new Promise(async (resolve) => {
+			const tooBig = '134078079299425970995740249982058461274793658205923933777235'
+				+ '614437217640300735469768018742981669034276900318581864860508537538828119'
+				+ '46569946433640096084097';
+
+			// prepare bytes from number
+			const timeToBuyBytes = web3.utils.asciiToHex(tooBig);
+
+			// transfer to contract
+			joyTokenTransfer(
+				subscriptionInstance.address,
+				'0',	// irrelevant
+				timeToBuyBytes
+			).send({ from: accounts[3] })
+				.catch((err) => {
+					assert.include(
+						err.message,
+						'VM Exception while processing transaction: revert',
+						'Transactions with bytes.lenght > 64 are not allowed.'
+					);
+					resolve();
+				});
+		}));
+
 	it('Buy_subscription', () =>
 		new Promise(async (resolve) => {
 			const actualPrice = await subscriptionInstance.subscriptionPrice.call();
-			const timeToBuy = 600;
+			const timeToBuy = 11259375; // abcdef in hex
 			const totalPrice = actualPrice * timeToBuy;
 			const timepointBefore = (new Date()).getTime() / 1000;
 
@@ -139,7 +164,7 @@ contract('Subscription_with_joyToken', (accounts) => {
 
 			const collectedFundsBefore = await subscriptionInstance.collectedFunds.call();
 
-			const timeToBuy = 400;
+			const timeToBuy = 1193040;	// 123450 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
 			// prepare bytes from number
@@ -166,11 +191,11 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const collectedFundsBefore = await subscriptionInstance.collectedFunds.call();
 
 			const actualPrice = await subscriptionInstance.subscriptionPrice.call();
-			const timeToBuy = 800;
+			const timeToBuy = 10926025; // a6b7c9 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
-			// prepare bytes from number
-			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16));
+			// prepare bytes from number, use uppercase string
+			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16).toUpperCase());
 			// transfer to contract
 			joyTokenTransfer(
 				subscriptionInstance.address,
@@ -201,7 +226,7 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const acc4BalanceBefore = await joyTokenInstance.balanceOf(accounts[4]);
 
 			const actualPrice = await subscriptionInstance.subscriptionPrice.call();
-			const timeToBuy = 6000;
+			const timeToBuy = 41097; // a089 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
 			// prepare bytes from number
