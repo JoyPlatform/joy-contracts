@@ -1,55 +1,50 @@
 #!/usr/bin/env bash
-
-# Exit script as soon as a command fails.
 set -o errexit
 
-# Executes cleanup function at script exit.
 trap cleanup EXIT
 
+# use json npm package (from dev dependencies)
+readonly mnemonic=$(cat test/config.json | node_modules/.bin/json mnemonic)
+readonly gasLimit="0xfffffffffff"
+
 cleanup() {
-  # Kill the ganache instance that we started (if we started one and if it's still running).
-  if [ -n "$ganache_pid" ] && ps -p $ganache_pid > /dev/null; then
-    if [ "$SOLIDITY_COVERAGE" = true ]; then
-      kill -9 $ganache_pid
-    else
-      # bacause we are using another script, process group ID is needed (PGID)
-      local pgid=$(ps -o pgid= $ganache_pid | grep -o [0-9]*)
-      kill -9 -$pgid
-    fi
-  fi
+	# Kill the ganache instance that we started (if we started one and if it's still running).
+	if [ -n "${pid}" ] && ps -p "${pid}" > /dev/null; then
+		kill "${pid}"
+	fi
 }
 
-if [ "$SOLIDITY_COVERAGE" = true ]; then
-  ganache_port=$(cat "test/config.json" | node_modules/.bin/json testrpc_port)
-else
-  ganache_port=$(cat "test/config.json" | node_modules/.bin/json ganache_port)
-fi
-
-ganache_running() {
-  nc -z localhost "$ganache_port"
+running_on_port() {
+	local port="${1}"
+	nc -z localhost "${port}"
 }
 
-start_ganache() {
-  local mnemonic=$(cat "test/config.json" | node_modules/.bin/json mnemonic)
+run_eth_env() {
+	local env_type="${1}"
+	local port=$(cat test/config.json | node_modules/.bin/json ${env_type}_port)
 
-  if [ "$SOLIDITY_COVERAGE" = true ]; then
-    node_modules/.bin/testrpc-sc --gasLimit 0xfffffffffff --port "$ganache_port"  --mnemonic "${mnemonic}" > /dev/null &
-  else
-    scripts/ganache.sh > /dev/null &
-  fi
+	if $(running_on_port "$port"); then
+		echo "Using existing ${env_type} instance"
+	else
+		echo "Starting our own ${env_type} instance"
 
-  ganache_pid=$!
+		if [ "$env_type" = "testrpc" ]; then
+			node_modules/.bin/testrpc-sc --port "${port}" --gasLimit "${gasLimit}" --mnemonic "${mnemonic}" > /dev/null &
+		elif [ "$env_type" = "ganache" ]; then
+			node_modules/.bin/ganache-cli --port "${port}" --gasLimit "${gasLimit}" --mnemonic "${mnemonic}" > /dev/null &
+		fi
+
+		# assign ID of process to pid var
+		pid="${!}"
+	fi
 }
 
-if ganache_running; then
-  echo "Using existing ganache instance"
+if [ "${SOLIDITY_COVERAGE}" = true ]; then
+	# run testrpc-sc
+	run_eth_env "testrpc"
+	node_modules/.bin/solidity-coverage
 else
-  echo "Starting our own ganache instance"
-  start_ganache
-fi
-
-if [ "$SOLIDITY_COVERAGE" = true ]; then
-  node_modules/.bin/solidity-coverage
-else
-  node_modules/.bin/truffle test
+	# run ganache
+	run_eth_env "ganache"
+	node_modules/.bin/truffle test
 fi
