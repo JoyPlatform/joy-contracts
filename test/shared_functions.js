@@ -7,7 +7,6 @@ const Web3 = require('web3');
 
 const sharedFunctions = (() => {
 	const web3 = new Web3();
-	const { BN } = web3.utils;
 
 	let joyTokenERC223;
 	let depositInstance;
@@ -28,17 +27,17 @@ const sharedFunctions = (() => {
 		});
 	}
 
-	function checkPlayerBalance(testPlayer, initialPlayerBalance, playerBalance, finalBalance) {
+	function checkPlayerBalance(testPlayer, initialPlayerBalance, playerBalance, remainBalance, finalBalance) {
 		return new Promise(async (resolve) => {
 			assert.ok(
-				playerBalance.eq(initialPlayerBalance.add(finalBalance)),
-				'Player balance should by equal finalBalance.'
+				playerBalance.eq(initialPlayerBalance.add(finalBalance.sub(remainBalance))),
+				'Player balance should by equal finalBalance reduced by remainBalance.'
 			);
 
 			const lockedFunds = await depositInstance.playerLockedFunds(testPlayer, joyGameInstance.address);
 			assert.ok(
-				lockedFunds.eq(new BN('0')),
-				'Player locked funds should by equal to 0.'
+				lockedFunds.eq(remainBalance),
+				'Player locked funds should by equal to remainBalance.'
 			);
 
 			resolve();
@@ -67,12 +66,9 @@ const sharedFunctions = (() => {
 		});
 	}
 
-	function settleAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings) {
+	function settleAndCheck(testPlayer, remainBalance, finalBalance, reserveWinnings, gameDevWinnings) {
 		// generate randon hex bytes32 as gameHash
 		const testGameHash = web3.utils.randomHex(32);
-
-		// without remain balances
-		const remainBalance = '0';
 
 		return new Promise(async (resolve, reject) => {
 			await initContracts();
@@ -84,7 +80,7 @@ const sharedFunctions = (() => {
 			try {
 				await joyGameInstance.accountGameResult(
 					testPlayer,
-					remainBalance,
+					remainBalance.toString(),
 					finalBalance.toString(),
 					testGameHash,
 					{ from: platformOwner }
@@ -97,23 +93,26 @@ const sharedFunctions = (() => {
 			// balance in deposit
 			const playerBalance = await depositInstance.balanceOfPlayer(testPlayer);
 
-			await checkPlayerBalance(testPlayer, initialPlayerBalance, playerBalance, finalBalance);
+			await checkPlayerBalance(
+				testPlayer,
+				initialPlayerBalance,
+				playerBalance,
+				remainBalance,
+				finalBalance
+			);
 			await checkDepositBalances(
 				initialReserveBalance,
 				initialGameDevBalance,
-				reserveWinnings,
-				gameDevWinnings
+				reserveWinnings.valueOf(),
+				gameDevWinnings.valueOf()
 			);
 			resolve();
 		});
 	}
 
-	function payoutAndCheck(testPlayer, finalBalance, reserveWinnings, gameDevWinnings) {
+	function payoutAndCheck(testPlayer, remainBalance, finalBalance, reserveWinnings, gameDevWinnings) {
 		// generate randon hex bytes32 as gameHash
 		const testGameHash = web3.utils.randomHex(32);
-
-		// without remain balances
-		const remainBalance = '0';
 
 		return new Promise(async (resolve, reject) => {
 			await initContracts();
@@ -124,7 +123,7 @@ const sharedFunctions = (() => {
 			try {
 				await joyGameInstance.payOutGameResult(
 					testPlayer,
-					remainBalance,
+					remainBalance.toString(),
 					finalBalance.toString(),
 					testGameHash,
 					{ from: platformOwner }
@@ -137,7 +136,14 @@ const sharedFunctions = (() => {
 			// balance in wallet
 			const playerWalletBalance = await joyTokenERC223.balanceOf(testPlayer);
 
-			await checkPlayerBalance(testPlayer, initialPlayerWalletBalance, playerWalletBalance, finalBalance);
+			await checkPlayerBalance(
+				testPlayer,
+				initialPlayerWalletBalance,
+				playerWalletBalance,
+				remainBalance,
+				finalBalance
+			);
+
 			await checkDepositBalances(
 				initialReserveBalance,
 				initialGameDevBalance,
