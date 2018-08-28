@@ -53,7 +53,7 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         require(JoyTokenUpgraded(msg.sender).getUnderlyingTokenAddress() == address(m_JoyToken));
 
         // execute subscribe method
-        subscribe(from, value, bytesHexToUint256(data));
+        subscribe(from, value, bytesToUint256(data));
     }
 
 
@@ -75,40 +75,16 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
     }
 
     /**
-     * pure, internal helper function that converts bytes in hex encoding to uint256 number
-     * example of outputs:
-     * bytes: "ff" -> uint256: 255
-     * bytes: "AD" -> uint256: 173  // works with both lowercase and uppercase
-     * bytes: "2Ffd" -> uint256: 12285
-     * notice:
+     * @dev Helper pure, internal function that converts bytes to uint256 number
      **/
-    function bytesHexToUint256(bytes b) pure public returns (uint256) {
+    function bytesToUint256(bytes b) pure internal returns (uint256){
         // there is no sense to convert bigger numbers
         require(b.length <= 64);
 
-        uint256 result = 0;
-        for (uint i = 0; i < b.length; i++) {
-            bool syntax = false;
-            uint256 c = uint256(b[i]);
-
-            // [0-9]
-            if (c >= 48 && c <= 57) {
-                syntax = true;
-                result = result * 16 + (c - 48);
-            }
-            // [A-F]
-            if(c >= 65 && c<= 70) {
-                syntax = true;
-                result = result * 16 + (c - 55);
-            }
-            // [a-f]
-            if(c >= 97 && c<= 102) {
-                syntax = true;
-                result = result * 16 + (c - 87);
-            }
-            // reverting bad input syntax
-            require(syntax);
+        uint256 number;
+        for(uint i = 0; i < b.length; i++){
+            number = number + uint(b[i]) * (2 ** (8 * (b.length - (i + 1))));
         }
-        return result;
-    }
+        return number;
+     }
 }

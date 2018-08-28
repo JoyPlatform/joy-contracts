@@ -20,7 +20,7 @@ contract SubscriptionWithEther is Subscription, Ownable {
     }
 
     // ammountOfTime means amount of subscription time (in seconds)
-    function subscribe(uint amountOfTime) public payable {
+    function subscribe(uint256 amountOfTime) public payable {
         require(msg.value == (subscriptionPrice * amountOfTime));
 
         // creating memory object about subsciption time-info

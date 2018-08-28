@@ -4,6 +4,17 @@ const JoyTokenUpgraded = artifacts.require('JoyTokenUpgraded');
 const Web3 = require('web3');
 
 
+function solidityBytes(num) {
+	let byteNum;
+	const hexNum = num.toString(16);
+	if (hexNum.length % 2) {
+		byteNum = `0x0${hexNum}`;
+	} else {
+		byteNum = `0x${hexNum}`;
+	}
+	return byteNum;
+}
+
 contract('Subscription_with_joyToken', (accounts) => {
 	const web3 = new Web3();
 	web3.setProvider(JoyToken.web3.currentProvider);
@@ -19,8 +30,9 @@ contract('Subscription_with_joyToken', (accounts) => {
 	// truffle currently have no mechanism to interact with overloaded methods, and we need transfer with data
 	// instead of using truffle-contract, we need to create contract object directly through web3
 	let joyTokenTransfer;
-
 	let subscriptionInstance;
+	let owner;
+	const testSubscriber = accounts[3];
 
 	beforeEach(async () => {
 		joyTokenInstance = await JoyToken.deployed();
@@ -30,13 +42,14 @@ contract('Subscription_with_joyToken', (accounts) => {
 		joyTokenTransfer = JoyToken223Web3.methods['transfer(address,uint256,bytes)'];
 
 		// send some tokens to acc3
-		await joyTokenInstance.transfer(accounts[3], testTokenAmount);
+		await joyTokenInstance.transfer(testSubscriber, testTokenAmount);
 
 		// allowances because base token is erc20
 		await joyTokenInstance.approve(joyTokenERC223.address, testTokenAmount, { from: accounts[0] });
-		await joyTokenInstance.approve(joyTokenERC223.address, testTokenAmount, { from: accounts[3] });
+		await joyTokenInstance.approve(joyTokenERC223.address, testTokenAmount, { from: testSubscriber });
 
 		subscriptionInstance = await SubscriptionWithJoyToken.deployed();
+		owner = await subscriptionInstance.owner.call();
 	});
 
 	it('Check_price', () =>
@@ -51,7 +64,7 @@ contract('Subscription_with_joyToken', (accounts) => {
 	// should throw exception
 	it('Set_price_fail', () =>
 		new Promise(async (resolve) => {
-			subscriptionInstance.setSubscriptionPrice(price2, { from: accounts[1] })
+			subscriptionInstance.setSubscriptionPrice(price2, { from: testSubscriber })
 				.catch((err) => {
 					assert.include(
 						err.message,
@@ -64,7 +77,6 @@ contract('Subscription_with_joyToken', (accounts) => {
 
 	it('Set_price', () =>
 		new Promise(async (resolve) => {
-			const owner = await subscriptionInstance.owner.call();
 			subscriptionInstance.setSubscriptionPrice(price2, { from: owner })
 				.then(async () => {
 					const newPrice = await subscriptionInstance.subscriptionPrice.call();
@@ -84,14 +96,11 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const timeToBuy = 600;
 			const totalPrice = badPrice * timeToBuy;
 
-			// prepare bytes from number
-			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16));
-
 			joyTokenTransfer(
 				subscriptionInstance.address,
 				totalPrice,
-				timeToBuyBytes
-			).send({ from: accounts[3] })
+				solidityBytes(timeToBuy)
+			).send({ from: testSubscriber })
 				.catch((err) => {
 					assert.include(
 						err.message,
@@ -104,18 +113,15 @@ contract('Subscription_with_joyToken', (accounts) => {
 
 	it('Buy_subscription_too_many_bytes', () =>
 		new Promise(async (resolve) => {
-			const tooBig = '134078079299425970995740249982058461274793658205923933777235'
+			const tooBig = '0x134078079299425970995740249982058461274793658205923933777235'
 				+ '614437217640300735469768018742981669034276900318581864860508537538828119'
-				+ '46569946433640096084097';
-
-			// prepare bytes from number
-			const timeToBuyBytes = web3.utils.asciiToHex(tooBig);
+				+ '465699464336400966084097';
 
 			// transfer to contract
 			joyTokenTransfer(
 				subscriptionInstance.address,
 				'0',	// irrelevant
-				timeToBuyBytes
+				tooBig
 			).send({ from: accounts[3] })
 				.catch((err) => {
 					assert.include(
@@ -141,10 +147,10 @@ contract('Subscription_with_joyToken', (accounts) => {
 			joyTokenTransfer(
 				subscriptionInstance.address,
 				totalPrice,
-				timeToBuyBytes
-			).send({ from: accounts[3] })
+				solidityBytes(timeToBuy)
+			).send({ from: testSubscriber })
 				.then(async () => {
-					const subscribeInfo = await subscriptionInstance.allSubscriptions.call(accounts[3]);
+					const subscribeInfo = await subscriptionInstance.allSubscriptions.call(testSubscriber);
 					const timepoint = subscribeInfo[0].valueOf();
 					const amountOfTime = subscribeInfo[1].valueOf();
 
@@ -163,8 +169,7 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const actualPrice = await subscriptionInstance.subscriptionPrice.call();
 
 			const collectedFundsBefore = await subscriptionInstance.collectedFunds.call();
-
-			const timeToBuy = 1193040;	// 123450 in hex
+			const timeToBuy = 1193040; // 123450 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
 			// prepare bytes from number
@@ -173,8 +178,8 @@ contract('Subscription_with_joyToken', (accounts) => {
 			joyTokenTransfer(
 				subscriptionInstance.address,
 				totalPrice,
-				timeToBuyBytes
-			).send({ from: accounts[3] })
+				solidityBytes(timeToBuy)
+			).send({ from: testSubscriber })
 				.then(() =>
 					// event name is hidden because we are using plain web3, not truffle-contract
 					subscriptionInstance.collectedFunds.call())
@@ -194,14 +199,12 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const timeToBuy = 10926025; // a6b7c9 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
-			// prepare bytes from number, use uppercase string
-			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16).toUpperCase());
 			// transfer to contract
 			joyTokenTransfer(
 				subscriptionInstance.address,
 				totalPrice,
-				timeToBuyBytes
-			).send({ from: accounts[3] })
+				solidityBytes(timeToBuy)
+			).send({ from: testSubscriber })
 				.then(() =>
 					subscriptionInstance.collectedFunds.call())
 				.then(collectedFunds =>
@@ -222,33 +225,30 @@ contract('Subscription_with_joyToken', (accounts) => {
 
 	it('Payout_funds_to_friend', () =>
 		new Promise(async (resolve) => {
-			const owner = await subscriptionInstance.owner.call();
-			const acc4BalanceBefore = await joyTokenInstance.balanceOf(accounts[4]);
+			const ownerFriend = accounts[5];
+			const friendBalanceBefore = await joyTokenInstance.balanceOf(ownerFriend);
 
 			const actualPrice = await subscriptionInstance.subscriptionPrice.call();
 			const timeToBuy = 41097; // a089 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
-			// prepare bytes from number
-			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16));
-
 			// transfer to contract
 			joyTokenTransfer(
 				subscriptionInstance.address,
 				totalPrice,
-				timeToBuyBytes
-			).send({ from: accounts[3] })
+				solidityBytes(timeToBuy)
+			).send({ from: testSubscriber })
 				.then(() =>
 					subscriptionInstance.collectedFunds.call())
 				.then(collectedFunds =>
 					// payOut all collected funds to account4
-					subscriptionInstance.payOut(accounts[4], collectedFunds.toNumber(), { from: owner }))
+					subscriptionInstance.payOut(ownerFriend, collectedFunds.toNumber(), { from: owner }))
 				.then(async () => {
 					const collectedFundsLeft = await subscriptionInstance.collectedFunds.call();
 					assert.equal(collectedFundsLeft.valueOf(), 0, 'Collected funds should be empty');
 
-					const acc4Balance = await joyTokenInstance.balanceOf(accounts[4]);
-					assert.equal(acc4Balance.valueOf(), acc4BalanceBefore.toNumber() + totalPrice);
+					const friendBalance = await joyTokenInstance.balanceOf(ownerFriend);
+					assert.equal(friendBalance.valueOf(), friendBalanceBefore.toNumber() + totalPrice);
 					resolve();
 				});
 		}));
