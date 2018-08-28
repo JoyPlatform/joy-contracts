@@ -1,6 +1,7 @@
 const JoyToken = artifacts.require('JoyToken');
 const SubscriptionWithJoyToken = artifacts.require('SubscriptionWithJoyToken');
 const JoyTokenUpgraded = artifacts.require('JoyTokenUpgraded');
+const MaliciousToken = artifacts.require('MaliciousToken');
 const Web3 = require('web3');
 
 
@@ -17,6 +18,7 @@ function solidityBytes(num) {
 
 contract('Subscription_with_joyToken', (accounts) => {
 	const web3 = new Web3();
+	const { BN } = web3.utils;
 	web3.setProvider(JoyToken.web3.currentProvider);
 
 	const gasLimit = 200000;
@@ -26,6 +28,7 @@ contract('Subscription_with_joyToken', (accounts) => {
 
 	let joyTokenInstance;
 	let joyTokenERC223;
+	let maliciousTokenInstance;
 
 	// truffle currently have no mechanism to interact with overloaded methods, and we need transfer with data
 	// instead of using truffle-contract, we need to create contract object directly through web3
@@ -50,7 +53,23 @@ contract('Subscription_with_joyToken', (accounts) => {
 
 		subscriptionInstance = await SubscriptionWithJoyToken.deployed();
 		owner = await subscriptionInstance.owner.call();
+
+		maliciousTokenInstance = await MaliciousToken.deployed();
 	});
+
+	function buySubscription(time) {
+		return subscriptionInstance.subscriptionPrice.call()
+			.then((actualPrice) => {
+				const totalPrice = actualPrice * time;
+
+				// transfer to contract
+				return joyTokenTransfer(
+					subscriptionInstance.address,
+					totalPrice,
+					solidityBytes(time)
+				).send({ from: testSubscriber });
+			});
+	}
 
 	it('Check_price', () =>
 		new Promise(async (resolve) => {
@@ -133,22 +152,31 @@ contract('Subscription_with_joyToken', (accounts) => {
 				});
 		}));
 
+	// trying to buy subscription with non supported token, should be reverted.
+	it('Buy_subscription_bad_token', () =>
+		new Promise(async (resolve) => {
+			const totalPrice = 5000;
+
+			maliciousTokenInstance.transferToContract(
+				subscriptionInstance.address,
+				totalPrice, { from: owner }
+			)
+				.catch((err) => {
+					assert.include(
+						err.message,
+						'VM Exception while processing transaction: revert',
+						'Subscription with bad token should be reverted. (prevents tokens lost)'
+					);
+					resolve();
+				});
+		}));
+
 	it('Buy_subscription', () =>
 		new Promise(async (resolve) => {
-			const actualPrice = await subscriptionInstance.subscriptionPrice.call();
 			const timeToBuy = 11259375; // abcdef in hex
-			const totalPrice = actualPrice * timeToBuy;
 			const timepointBefore = (new Date()).getTime() / 1000;
 
-			// prepare bytes from number
-			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16));
-
-			// transfer to contract
-			joyTokenTransfer(
-				subscriptionInstance.address,
-				totalPrice,
-				solidityBytes(timeToBuy)
-			).send({ from: testSubscriber })
+			buySubscription(timeToBuy)
 				.then(async () => {
 					const subscribeInfo = await subscriptionInstance.allSubscriptions.call(testSubscriber);
 					const timepoint = subscribeInfo[0].valueOf();
@@ -172,14 +200,7 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const timeToBuy = 1193040; // 123450 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
-			// prepare bytes from number
-			const timeToBuyBytes = web3.utils.asciiToHex(timeToBuy.toString(16));
-			// transfer to contract
-			joyTokenTransfer(
-				subscriptionInstance.address,
-				totalPrice,
-				solidityBytes(timeToBuy)
-			).send({ from: testSubscriber })
+			buySubscription(timeToBuy)
 				.then(() =>
 					// event name is hidden because we are using plain web3, not truffle-contract
 					subscriptionInstance.collectedFunds.call())
@@ -191,7 +212,6 @@ contract('Subscription_with_joyToken', (accounts) => {
 
 	it('Payout_funds', () =>
 		new Promise(async (resolve) => {
-			const owner = await subscriptionInstance.owner.call();
 			const ownerBalanceBefore = await joyTokenInstance.balanceOf(owner);
 			const collectedFundsBefore = await subscriptionInstance.collectedFunds.call();
 
@@ -199,7 +219,6 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const timeToBuy = 10926025; // a6b7c9 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
-			// transfer to contract
 			joyTokenTransfer(
 				subscriptionInstance.address,
 				totalPrice,
@@ -232,23 +251,40 @@ contract('Subscription_with_joyToken', (accounts) => {
 			const timeToBuy = 41097; // a089 in hex
 			const totalPrice = actualPrice * timeToBuy;
 
-			// transfer to contract
-			joyTokenTransfer(
-				subscriptionInstance.address,
-				totalPrice,
-				solidityBytes(timeToBuy)
-			).send({ from: testSubscriber })
+			buySubscription(timeToBuy)
 				.then(() =>
 					subscriptionInstance.collectedFunds.call())
 				.then(collectedFunds =>
-					// payOut all collected funds to account4
+					// payOut all collected funds to friend
 					subscriptionInstance.payOut(ownerFriend, collectedFunds.toNumber(), { from: owner }))
 				.then(async () => {
 					const collectedFundsLeft = await subscriptionInstance.collectedFunds.call();
 					assert.equal(collectedFundsLeft.valueOf(), 0, 'Collected funds should be empty');
 
 					const friendBalance = await joyTokenInstance.balanceOf(ownerFriend);
+
 					assert.equal(friendBalance.valueOf(), friendBalanceBefore.toNumber() + totalPrice);
+					resolve();
+				});
+		}));
+
+	// try to payout more than collected
+	it('Failed_Payout', () =>
+		new Promise(async (resolve) => {
+			const timeToBuy = 10926025; // a6b7c9 in hex
+
+			buySubscription(timeToBuy)
+				.then(() =>
+					subscriptionInstance.collectedFunds.call())
+				.then(collectedFunds =>
+					// payOut all collected funds
+					subscriptionInstance.payOut(owner, (collectedFunds.mul(new BN('2'))).toNumber(), { from: owner }))
+				.catch((err) => {
+					assert.include(
+						err.message,
+						'VM Exception while processing transaction: revert',
+						'Can not payout more funds than are already collected.'
+					);
 					resolve();
 				});
 		}));
