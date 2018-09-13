@@ -7,6 +7,7 @@ const Web3 = require('web3');
 
 const sharedFunctions = (() => {
 	const web3 = new Web3();
+	const { BN } = web3.utils;
 
 	let joyTokenERC223;
 	let depositInstance;
@@ -67,8 +68,9 @@ const sharedFunctions = (() => {
 	}
 
 	function settleAndCheck(testPlayer, remainBalance, finalBalance, reserveWinnings, gameDevWinnings) {
-		// generate randon hex bytes32 as gameHash
-		const testGameHash = web3.utils.randomHex(32);
+		// generate randon hex bytes32 as gameId and gameSig
+		const testGameId = web3.utils.randomHex(32);
+		const testGameSig = web3.utils.randomHex(32);
 
 		return new Promise(async (resolve, reject) => {
 			await initContracts();
@@ -82,7 +84,8 @@ const sharedFunctions = (() => {
 					testPlayer,
 					remainBalance.toString(),
 					finalBalance.toString(),
-					testGameHash,
+					testGameId,
+					testGameSig,
 					{ from: platformOwner }
 				);
 			} catch (err) {
@@ -111,8 +114,9 @@ const sharedFunctions = (() => {
 	}
 
 	function payoutAndCheck(testPlayer, remainBalance, finalBalance, reserveWinnings, gameDevWinnings) {
-		// generate randon hex bytes32 as gameHash
-		const testGameHash = web3.utils.randomHex(32);
+		// generate randon hex bytes32 as gameId and gameSig
+		const testGameId = web3.utils.randomHex(32);
+		const testGameSig = web3.utils.randomHex(32);
 
 		return new Promise(async (resolve, reject) => {
 			await initContracts();
@@ -125,7 +129,8 @@ const sharedFunctions = (() => {
 					testPlayer,
 					remainBalance.toString(),
 					finalBalance.toString(),
-					testGameHash,
+					testGameId,
+					testGameSig,
 					{ from: platformOwner }
 				);
 			} catch (err) {
@@ -150,6 +155,47 @@ const sharedFunctions = (() => {
 				reserveWinnings,
 				gameDevWinnings
 			);
+			resolve();
+		});
+	}
+
+	// if player has open game session, close it with no lose and no winnings.
+	function endGameSession(testPlayer, distributeWay, finalBalanceTag) {
+		return new Promise(async (resolve) => {
+			let finalBalance;
+			const playerLockedBalance = await depositInstance.playerLockedFunds(testPlayer, joyGameInstance.address);
+			if (finalBalanceTag === 'lose_all') {
+				finalBalance = '0';
+			} else {
+				finalBalance = playerLockedBalance;
+			}
+
+			if (playerLockedBalance.gt(new BN('0'))) {
+				// generate randon hex bytes32 as gameId and gameSig
+				const testGameId = web3.utils.randomHex(32);
+				const testGameSig = web3.utils.randomHex(32);
+				const remainBalance = '0';
+
+				if (distributeWay === 'settleGameResults') {
+					await joyGameInstance.accountGameResult(
+						testPlayer,
+						remainBalance,
+						finalBalance,
+						testGameId,
+						testGameSig,
+						{ from: platformOwner }
+					);
+				} else if (distributeWay === 'payOutGameResults') {
+					await joyGameInstance.payOutGameResult(
+						testPlayer,
+						remainBalance,
+						finalBalance,
+						testGameId,
+						testGameSig,
+						{ from: platformOwner }
+					);
+				}
+			}
 			resolve();
 		});
 	}
@@ -199,6 +245,7 @@ const sharedFunctions = (() => {
 	return {
 		settleAndCheck,
 		payoutAndCheck,
+		endGameSession,
 		logStatus
 	};
 })();

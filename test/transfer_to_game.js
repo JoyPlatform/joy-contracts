@@ -1,3 +1,5 @@
+import sharedFunctions from './shared_functions';
+
 const JoyToken = artifacts.require('JoyToken');
 const JoyTokenUpgraded = artifacts.require('JoyTokenUpgraded');
 const GameDeposit = artifacts.require('GameDeposit');
@@ -9,6 +11,8 @@ contract('JoyToken_TransferToGame', (accounts) => {
 	const web3 = new Web3();
 	const { BN } = web3.utils;
 	web3.setProvider(JoyTokenUpgraded.web3.currentProvider);
+
+	const testPlayer = accounts[5];
 
 	// We can do this because JoyToken have same number of decimal places
 	const testAmount = web3.utils.toWei('10', 'ether');
@@ -25,10 +29,10 @@ contract('JoyToken_TransferToGame', (accounts) => {
 		depositInstance = await GameDeposit.deployed();
 		joyGameInstance = await JoyGamePlatform.deployed();
 
-		await joyTokenInstance.transfer(accounts[5], testAmount, { from: accounts[0] });
+		await joyTokenInstance.transfer(testPlayer, testAmount, { from: accounts[0] });
 
 		// allowances
-		await joyTokenInstance.approve(joyTokenERC223.address, testAmount, { from: accounts[5] });
+		await joyTokenInstance.approve(joyTokenERC223.address, testAmount, { from: testPlayer });
 
 
 		await joyTokenERC223.transferToGame(
@@ -39,24 +43,12 @@ contract('JoyToken_TransferToGame', (accounts) => {
 	});
 
 	afterEach(async () => {
-		// generate randon hex bytes32 as gameHash
-		const testGameHash = web3.utils.randomHex(32);
-		// playes lose all
-		const finalBalance = '0';
-		const remainBalance = '0';
-		const platformOwner = await depositInstance.owner();
-
-		await joyGameInstance.accountGameResult(
-			accounts[5],
-			remainBalance,
-			finalBalance,
-			testGameHash, { from: platformOwner }
-		);
+		await sharedFunctions.endGameSession(testPlayer, 'settleGameResults', 'lose_all');
 	});
 
 
 	it('playerLockedFunds_in_deposit', (done) => {
-		depositInstance.playerLockedFunds(accounts[5], joyGameInstance.address)
+		depositInstance.playerLockedFunds(testPlayer, joyGameInstance.address)
 			.then((lockedFunds) => {
 				assert.ok(lockedFunds.eq(new BN(testAmount)), 'Bad lockedFunds amount.');
 				done();
@@ -64,7 +56,7 @@ contract('JoyToken_TransferToGame', (accounts) => {
 	});
 
 	it('playerLockedFunds_in_game', (done) => {
-		joyGameInstance.playerLockedFunds(accounts[5])
+		joyGameInstance.playerLockedFunds(testPlayer)
 			.then((lockedFundsInGame) => {
 				assert.ok(lockedFundsInGame.eq(new BN(testAmount)), 'Bad lockedFunds amount.');
 				done();
@@ -72,7 +64,7 @@ contract('JoyToken_TransferToGame', (accounts) => {
 	});
 
 	it('check_player_deposit', (done) => {
-		depositInstance.balanceOfPlayer(accounts[5])
+		depositInstance.balanceOfPlayer(testPlayer)
 			.then((playerBalance) => {
 				assert.ok(playerBalance.eq(new BN('0')), 'Player deposit balance, should be zero.');
 				done();
@@ -80,7 +72,7 @@ contract('JoyToken_TransferToGame', (accounts) => {
 	});
 
 	it('open_session_check', (done) => {
-		joyGameInstance.openSessions(accounts[5])
+		joyGameInstance.openSessions(testPlayer)
 			.then((isOpen) => {
 				assert.ok(isOpen, 'Game sessions should be open.');
 				done();
