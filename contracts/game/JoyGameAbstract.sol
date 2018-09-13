@@ -20,7 +20,8 @@ contract JoyGameAbstract is Ownable {
                       uint256 start_balance,
                       uint256 remainBalance,
                       uint256 finalBalance,
-                      bytes32 indexed hashOfGameProcess);
+                      bytes32 indexed gameProcessId,
+                      bytes32 indexed gameSignature);
 
     /**
      * @dev Abstract external function that starts game session.
@@ -30,14 +31,15 @@ contract JoyGameAbstract is Ownable {
     function startGame(address _playerAddr, uint256 _value) external;
 
     /**
-     * @dev struct containg outcome of the game, with provable hash, that could be match with game history in GS
+     * @dev struct containg outcome of the game, with provable signature, that could be match with game history in GS
      * (or mayby it could be cryptoanlyzed/mined)
      */
     struct GameOutcome {
         address player;
         uint256 remainBalance; // balance that stays in the game
         uint256 finalBalance; // actual player balance got from game server
-        bytes32 hashOfGameProcess; // Hashed course of the finite game
+        bytes32 gameProcessId; // id of game outcome process
+        bytes32 gameSignature; // provable signature of of the completed game session
     }
 
     /**

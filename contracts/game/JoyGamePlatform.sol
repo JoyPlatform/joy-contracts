@@ -80,9 +80,10 @@ contract JoyGamePlatform is JoyGameAbstract {
     function accountGameResult(address _player,
                                uint256 _remainBalance,
                                uint256 _finalBalance,
-                               bytes32 hashOfGameProcess) public onlyOwner {
+                               bytes32 gameProcessId,
+                               bytes32 gameSignature) public onlyOwner {
 
-        endGame(GameOutcome(_player, _remainBalance, _finalBalance, hashOfGameProcess));
+        endGame(GameOutcome(_player, _remainBalance, _finalBalance, gameProcessId, gameSignature));
 
         m_playersDeposit.accountGameResult(_player, _remainBalance, _finalBalance);
     }
@@ -91,9 +92,10 @@ contract JoyGamePlatform is JoyGameAbstract {
     function payOutGameResult(address _player,
                               uint256 _remainBalance,
                               uint256 _finalBalance,
-                              bytes32 hashOfGameProcess) public onlyOwner {
+                              bytes32 gameProcessId,
+                              bytes32 gameSignature) public onlyOwner {
 
-        endGame(GameOutcome(_player, _remainBalance, _finalBalance, hashOfGameProcess));
+        endGame(GameOutcome(_player, _remainBalance, _finalBalance, gameProcessId, gameSignature));
 
         m_playersDeposit.payOutGameResult(_player, _remainBalance, _finalBalance);
     }
@@ -101,7 +103,7 @@ contract JoyGamePlatform is JoyGameAbstract {
     /**
      * Override function
      * @dev Save provable outcome of the game and distribute Tokens to gameDev, platform, and player
-     * @param _gameOutcome struct with last updated amount of the WS wallets along with the Hash of provable data
+     * @param _gameOutcome struct with last updated amount of the WS wallets along with the id and Signature of provable data
      */
     function endGame(GameOutcome _gameOutcome) internal {
         // Save initial player funds to stack variable
@@ -121,6 +123,7 @@ contract JoyGamePlatform is JoyGameAbstract {
                          l_gameLockedFunds,
                          _gameOutcome.remainBalance,
                          _gameOutcome.finalBalance,
-                         _gameOutcome.hashOfGameProcess);
+                         _gameOutcome.gameProcessId,
+                         _gameOutcome.gameSignature);
     }
 }

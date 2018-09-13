@@ -20,8 +20,8 @@ module.exports = {
 			port: ropsten_port,
 			network_id: '3',
 			from: platformOwner,
-			gas: 6000000,
-			gasPrice: 16000000000
+			gas: 4700000,
+			gasPrice: 160000000000
 		},
 		development: {
 			host: 'localhost',
