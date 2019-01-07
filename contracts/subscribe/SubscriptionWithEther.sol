@@ -1,15 +1,15 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.23;
+
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 import './Subscription.sol';
-import '../ownership/Ownable.sol';
 
 /**
  * Contract for purchasing subscriptions with ether on the owned platform
  */
 contract SubscriptionWithEther is Subscription, Ownable {
 
-    // constructor
-    function SubscriptionWithEther() public {
+    constructor() public {
         // set initially subscription price in base wei units
         subscriptionPrice = 0.02 szabo; // 20 Gwei
     }
@@ -20,14 +20,14 @@ contract SubscriptionWithEther is Subscription, Ownable {
     }
 
     // ammountOfTime means amount of subscription time (in seconds)
-    function subscribe(uint amountOfTime) public payable {
+    function subscribe(uint256 amountOfTime) public payable {
         require(msg.value == (subscriptionPrice * amountOfTime));
 
         // creating memory object about subsciption time-info
         subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
         allSubscriptions[msg.sender] = subInfo;
-        newSubscription(msg.sender, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
+        emit newSubscription(msg.sender, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
     }
 
     // return collected funds in Wei that can be withdrawed by platform owner.

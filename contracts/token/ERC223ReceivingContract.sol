@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.23;
 
  /**
  * @title Contract that will work with ERC223 tokens.
@@ -12,5 +12,5 @@ contract ERC223ReceivingContract {
      * @param _value Amount of tokens.
      * @param _data  Transaction metadata.
      */
-    function tokenFallback(address _from, uint _value, bytes _data) external;
+    function tokenFallback(address _from, uint256 _value, bytes _data) external;
 }

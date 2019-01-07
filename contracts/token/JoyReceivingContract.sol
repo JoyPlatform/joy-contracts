@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.23;
 
 import './ERC223ReceivingContract.sol';
 
@@ -8,5 +8,5 @@ import './ERC223ReceivingContract.sol';
  */
 contract JoyReceivingContract is ERC223ReceivingContract {
     //  customDeposit function analogous to tokenFallback function in ERC223ReceivingContract
-    function customDeposit(address _from, uint _value, bytes _data) external;
+    function customDeposit(address _from, address _game, uint256 _value, bytes _data) external;
 }

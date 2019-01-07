@@ -1,9 +1,13 @@
 # joy-contracts
+[![Build Status](https://img.shields.io/travis/JoyPlatform/joy-contracts.svg?branch=develop&style=flat-square)](https://travis-ci.org/JoyPlatform/joy-contracts)
+[![Coverage Status](https://img.shields.io/coveralls/github/JoyPlatform/joy-contracts/develop.svg?style=flat-square)](https://coveralls.io/github/JoyPlatform/joy-contracts?branch=develop)
 
 Joy Platform - main repository for testing and deploying smart-contracts.
 
 Smart-contracts are located in `contracts` directory.
-[Populus framework](https://github.com/pipermerriam/populus "populus github repository") was used to compile, deploy and test our smart-contracts.
+Tests and contracts migrations uses [Truffle](https://github.com/trufflesuite/truffle)
+
+**deprecated code which uses [Populus framework](https://github.com/pipermerriam/populus "populus github repository") was moved to separated `populus` directory.*
 
 ## download sources
 
@@ -14,53 +18,53 @@ git clone https://github.com/JoyPlatform/joy-contracts.git
 
 ## build
 
-### dependencies
+### install dependencies
 
-- `python3` - python language intepreter
-- `populus` - framework for solidity smart-contracts
+- `npm` - JavaScript package manager
+- `truffle` - framework for solidity smart-contracts
 - `solc` - solidity compiler
+
+### configuration
+
+Basic test/development configuration is available in `truffle-config.js` file.
+For more advanced usage, migrations to testnet or main network, configuration must be upgraded.
 
 ### compilation
 
 ```
-$ populus compile
-==========================================================================
-> Found 12 contract source files
-  - contracts/deposit/PlatformDeposit.sol
-  - contracts/game/JoyGameAbstract.sol
-  - contracts/game/JoyGameDemo.sol
-  - contracts/math/SafeMath.sol
-  - contracts/ownership/Ownable.sol
-  - contracts/token/BasicToken.sol
-  - contracts/token/DToken.sol
-  - contracts/token/ERC20.sol
-  - contracts/token/ERC20Basic.sol
-  - contracts/token/ERC223ReceivingContract.sol
-  - contracts/token/MultiContractAsset.sol
-  - contracts/token/StandardToken.sol
-> Compiled 12 contracts
-  - contracts/deposit/PlatformDeposit.sol:PlatformDeposit
-  - contracts/game/JoyGameAbstract.sol:JoyGameAbstract
-  - contracts/game/JoyGameDemo.sol:JoyGameDemo
-  - contracts/math/SafeMath.sol:SafeMath
-  - contracts/ownership/Ownable.sol:Ownable
-  - contracts/token/BasicToken.sol:BasicToken
-  - contracts/token/DToken.sol:DToken
-  - contracts/token/ERC20.sol:ERC20
-  - contracts/token/ERC20Basic.sol:ERC20Basic
-  - contracts/token/ERC223ReceivingContract.sol:ERC223ReceivingContract
-  - contracts/token/MultiContractAsset.sol:MultiContractAsset
-  - contracts/token/StandardToken.sol:StandardToken
-> Wrote compiled assets to: build/contracts.json
-
+$ truffle compile
 ```
+#### example output:
+```
+Compiling ./contracts/deposit/PlatformDeposit.sol...
+Compiling ./contracts/game/JoyGameAbstract.sol...
+Compiling ./contracts/game/JoyGameDemo.sol...
+Compiling ./contracts/math/SafeMath.sol...
+Compiling ./contracts/ownership/Ownable.sol...
+Compiling ./contracts/subscribe/Subscription.sol...
+Compiling ./contracts/subscribe/SubscriptionWithJoyToken.sol...
+Compiling ./contracts/token/BasicToken.sol...
+Compiling ./contracts/token/ERC20.sol...
+Compiling ./contracts/token/ERC20Basic.sol...
+Compiling ./contracts/token/ERC223ReceivingContract.sol...
+Compiling ./contracts/token/JoyReceivingContract.sol...
+Compiling ./contracts/token/JoyToken.sol...
+Compiling ./contracts/token/StandardToken.sol...
 
-Output is serialized as JSON and written to build/contracts.json
+Writing artifacts to ./build/contracts
+```
 
 ## running tests
 
-Tests are written using `py.test` and can be run from root directory by:
+Tests are written using JS mocha and requires ganache-cli (testing Ethereum RPC client):
 
+All tests can be run:
 ```
-$ py.test
+$ npm run test
+```
+
+or if needed. Specific test file:
+```
+$ npm run ganache
+$ truffle test test/testfile.js  # in separated terminal/tab
 ```

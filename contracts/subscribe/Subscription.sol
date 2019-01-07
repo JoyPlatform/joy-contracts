@@ -1,4 +1,4 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.23;
 
 /**
  * Interface for Subscribtion contracts
@@ -7,9 +7,9 @@ contract Subscription {
     // struct that contain made subscription information
     struct subscribeInfo {
         // Unix time, when the subscription was bought
-        uint timepoint;
+        uint256 timepoint;
         // time in seconds, how much of subscription time was bought
-        uint amountOfTime;
+        uint256 amountOfTime;
     }
 
     // mapping of addresses to information about made subscription
@@ -19,7 +19,7 @@ contract Subscription {
     uint256 public subscriptionPrice;
 
     // event - two last arguments are from subscribeInfo
-    event newSubscription(address indexed buyer, uint256 price, uint timepoint, uint amountOfTime);
+    event newSubscription(address indexed buyer, uint256 price, uint256 timepoint, uint256 amountOfTime);
 
     // setting new subscription price
     function setSubscriptionPrice(uint256 newPrice) public;

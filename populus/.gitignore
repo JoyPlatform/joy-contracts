@@ -1,0 +1,16 @@
+# Populus directory gitignore
+
+# tests pycache
+tests/__pycache__/
+
+# populus configuration file
+project.json
+populus.json
+gethipc.config
+
+# populus deployment registy
+registrar.json
+
+# populus logs
+logs
+

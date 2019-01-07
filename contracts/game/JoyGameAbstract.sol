@@ -1,21 +1,27 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.23;
 
-import '../ownership/Ownable.sol';
-
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract JoyGameAbstract is Ownable {
-
     /**
      * gameDevAddr is a developer of a game, this address is needed at the end of each game session;
      * part of platform profits will be distributed to this address
      */
     address public gameDev;
 
-    // Event that will broadcast in blockchain information about new game session
+    // Event about new game session started
     event NewGameSession(address indexed player, uint256 start_balance);
 
-    // Event that will broadcast in blockchain information about finite game session
-    event EndGameInfo(address indexed player, uint256 start_balance, uint256 finalBalance, bytes32 indexed hashOfGameProcess);
+    // Event about refreshed with new funds game session
+    event RefreshGameSession(address indexed player, uint256 increased_value);
+
+    // Event about finite game session
+    event EndGameInfo(address indexed player,
+                      uint256 start_balance,
+                      uint256 remainBalance,
+                      uint256 finalBalance,
+                      bytes32 indexed gameProcessId,
+                      bytes32 indexed gameSignature);
 
     /**
      * @dev Abstract external function that starts game session.
@@ -25,14 +31,15 @@ contract JoyGameAbstract is Ownable {
     function startGame(address _playerAddr, uint256 _value) external;
 
     /**
-     * @dev struct containg outcome of the game, with provable hash, that could be match with game history in GS
+     * @dev struct containg outcome of the game, with provable signature, that could be match with game history in GS
      * (or mayby it could be cryptoanlyzed/mined)
      */
     struct GameOutcome {
         address player;
-        uint256 finalBalance;
-        // Hashed course of the finite game
-        bytes32 hashOfGameProcess;
+        uint256 remainBalance; // balance that stays in the game
+        uint256 finalBalance; // actual player balance got from game server
+        bytes32 gameProcessId; // id of game outcome process
+        bytes32 gameSignature; // provable signature of of the completed game session
     }
 
     /**

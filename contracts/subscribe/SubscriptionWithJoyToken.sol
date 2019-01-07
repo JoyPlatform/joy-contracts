@@ -1,20 +1,20 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.23;
+
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 import './Subscription.sol';
-import '../ownership/Ownable.sol';
 import '../token/ERC223ReceivingContract.sol';
 import '../token/JoyToken.sol';
+import '../token/JoyToken_Upgraded.sol';
 
 /**
  * Contract for purchasing subscriptions with ERC223 JoyToken on the owned platform
  */
 contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContract {
-
     // instance of deployed JoyToken contract. Registered in constructor
     JoyToken public m_JoyToken;
 
-    // constructor
-    function SubscriptionWithJoyToken(address JoyTokenAddress) public {
+    constructor(address JoyTokenAddress) public {
         // create JoyToken instance from deployed address
         m_JoyToken = JoyToken(JoyTokenAddress);
 
@@ -40,7 +40,7 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
         subscribeInfo memory subInfo = subscribeInfo(block.timestamp, amountOfTime);
 
         allSubscriptions[subscriber] = subInfo;
-        newSubscription(msg.sender, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
+        emit newSubscription(subscriber, subscriptionPrice, subInfo.timepoint, subInfo.amountOfTime);
     }
 
     /**
@@ -48,12 +48,12 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
      * This contract could receive tokens, using functionalities designed in erc223 standard.
      * !! works only with tokens designed in erc223 way.
      */
-    function onTokenReceived(address from, uint value, bytes data) external {
+    function tokenFallback(address from, uint256 value, bytes data) external {
         // msg.sender is a token-contract address here, get address of JoyToken and check
-        require(msg.sender == address(m_JoyToken));
+        require(JoyTokenUpgraded(msg.sender).getUnderlyingTokenAddress() == address(m_JoyToken));
 
         // execute subscribe method
-        subscribe(from, value, bytesHexToUint256(data));
+        subscribe(from, value, bytesToUint256(data));
     }
 
 
@@ -67,47 +67,24 @@ contract SubscriptionWithJoyToken is Subscription, Ownable, ERC223ReceivingContr
     // function that allows platform owner to withdraw funds to given address
     function payOut(address to, uint256 amount) onlyOwner public {
         address contractAddress = this;
-        require(amount <= contractAddress.balance);
+
+        require(amount <= m_JoyToken.balanceOf(contractAddress));
 
         // Use JoyToken method to transfer real Tokens to platform owner.
         m_JoyToken.transfer(to, amount);
     }
 
     /**
-     * pure, internal helper function that converts bytes in hex encoding to uint256 number
-     * example of outputs:
-     * bytes: "ff" -> uint256: 255
-     * bytes: "AD" -> uint256: 173  // works with both lowercase and uppercase
-     * bytes: "2Ffd" -> uint256: 12285
-     * notice:
+     * @dev Helper pure, internal function that converts bytes to uint256 number
      **/
-    function bytesHexToUint256(bytes b) pure public returns (uint256) {
+    function bytesToUint256(bytes b) pure internal returns (uint256){
         // there is no sense to convert bigger numbers
         require(b.length <= 64);
 
-        uint256 result = 0;
-        for (uint i = 0; i < b.length; i++) {
-            bool syntax = false;
-            uint256 c = uint256(b[i]);
-
-            // [0-9]
-            if (c >= 48 && c <= 57) {
-                syntax = true;
-                result = result * 16 + (c - 48);
-            }
-            // [A-F]
-            if(c >= 65 && c<= 70) {
-                syntax = true;
-                result = result * 16 + (c - 55);
-            }
-            // [a-f]
-            if(c >= 97 && c<= 102) {
-                syntax = true;
-                result = result * 16 + (c - 87);
-            }
-            // reverting bad input syntax
-            require(syntax);
+        uint256 number;
+        for(uint i = 0; i < b.length; i++){
+            number = number + uint(b[i]) * (2 ** (8 * (b.length - (i + 1))));
         }
-        return result;
-    }
+        return number;
+     }
 }
